@@ -65,8 +65,8 @@ test("all models expose required config fields + contextWindow", () => {
 
 test("exact models route to the real tiktoken data", () => {
   const exact = Object.entries(models).filter(([, c]) => c.exact);
-  assert.strictEqual(exact.length, 4, "expected exactly 4 exact models");
-  assert.deepStrictEqual(exact.map(([k]) => k).sort(), ["gpt-3", "gpt-4", "gpt-4o", "llama-3"]);
+  assert.strictEqual(exact.length, 5, "expected exactly 5 exact models");
+  assert.deepStrictEqual(exact.map(([k]) => k).sort(), ["gpt-3", "gpt-4", "gpt-4o", "gpt-5", "llama-4"]);
   for (const [, c] of exact) {
     assert.ok(window.TIKTOKEN_DATA[c.tiktokenData], `missing tiktoken data for ${c.tiktokenData}`);
   }
@@ -84,8 +84,8 @@ test("exact: GPT-4 (cl100k_base) 'Hello World!' -> [9906, 4435, 0]", () => {
   assert.deepStrictEqual(ids, [9906, 4435, 0]);
 });
 
-test("exact: Llama 3 'Hello' -> [9906] and GPT-3 (p50k) 'Hello' -> [15496]", () => {
-  assert.deepStrictEqual(makeTokenizer("llama-3").tokenize("Hello").map(t => t.id), [9906]);
+test("exact: Llama 4 (Llama 3 128k vocab) 'Hello' -> [9906] and GPT-3 (p50k) 'Hello' -> [15496]", () => {
+  assert.deepStrictEqual(makeTokenizer("llama-4").tokenize("Hello").map(t => t.id), [9906]);
   assert.deepStrictEqual(makeTokenizer("gpt-3").tokenize("Hello").map(t => t.id), [15496]);
 });
 
@@ -119,20 +119,20 @@ test("BERT wraps input in [CLS] and [SEP]", () => {
 });
 
 test("SentencePiece models use the ▁ space marker", () => {
-  const t = makeTokenizer("gemini-2-flash").tokenize("Hello world");
+  const t = makeTokenizer("gemini-3-pro").tokenize("Hello world");
   assert.ok(t.some(x => x.displaySubword.includes("▁")));
 });
 
 test("tokens reconstruct the original text (BPE round-trip)", () => {
   const text = "Hello World! How does AI tokenize 中文 text? 🤖";
-  const tokens = makeTokenizer("qwen-2-5").tokenize(text);
+  const tokens = makeTokenizer("qwen-3-5").tokenize(text);
   const rebuilt = tokens.map(x => text.slice(x.start, x.end)).join("");
   assert.strictEqual(rebuilt, text);
 });
 
 test("tokens are contiguous and non-overlapping (BPE)", () => {
   const text = "The quick brown fox jumps over the lazy dog 12345";
-  const tokens = makeTokenizer("qwen-2-5").tokenize(text);
+  const tokens = makeTokenizer("qwen-3-5").tokenize(text);
   for (let i = 0; i < tokens.length; i++) {
     assert.ok(tokens[i].start >= 0 && tokens[i].end <= text.length);
     if (i > 0) assert.strictEqual(tokens[i].start, tokens[i - 1].end);
@@ -146,7 +146,7 @@ test("BPE merge steps are produced for multi-char text", () => {
 });
 
 test("every token exposes id, bytes, hexBytes and type", () => {
-  const tokens = makeTokenizer("qwen-2-5").tokenize("Test 🚀");
+  const tokens = makeTokenizer("qwen-3-5").tokenize("Test 🚀");
   for (const t of tokens) {
     assert.ok(Number.isInteger(t.id));
     assert.ok(Array.isArray(t.bytes));

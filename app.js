@@ -9,8 +9,8 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Model Instances
   const modelConfigs = window.TOKENIZER_VOCABS.models;
-  let activeModelKey = "gpt-4o";
-  let compareModelKey = "llama-3";
+  let activeModelKey = "gpt-5";
+  let compareModelKey = "llama-4";
   let activeTokenizer = null;
   let compareTokenizer = null;
   let viewMode = "pills"; // "pills" | "bars"
@@ -60,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Tokenizer Construction (async for exact models)
   // ==========================================
   function configFor(key) {
-    return modelConfigs[key] || modelConfigs["gpt-4o"];
+    return modelConfigs[key] || modelConfigs["gpt-5"];
   }
 
   function dataLoaded(key) {
@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       await ensureLoaded(activeModelKey);
       if (v !== refreshVersion) return;
-      try { activeTokenizer = createTokenizer(activeModelKey); } catch (e) { activeTokenizer = createTokenizer("gpt-4o"); }
+      try { activeTokenizer = createTokenizer(activeModelKey); } catch (e) { activeTokenizer = createTokenizer("gpt-5"); }
     }
 
     // Tokenize active model

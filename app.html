@@ -3,24 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Universal LLM Tokenizer & Visualizer - See How AI Models Read Text</title>
-  <meta name="description" content="Interactive visualizer showing how text, code, emojis, and non-English words are converted into subword tokens for GPT-4o, Llama 3, Claude, Gemini, DeepSeek & 14 models.">
-
-  <!-- Open Graph / Social Sharing -->
-  <meta property="og:type" content="website">
-  <meta property="og:site_name" content="Universal LLM Tokenizer">
-  <meta property="og:title" content="Universal LLM Tokenizer & Visualizer">
-  <meta property="og:description" content="Type any prompt and watch GPT-4o, Llama 3, Claude, Gemini & 14 models split it into tokens — live, with exact token IDs. 100% client-side, no API keys.">
-  <meta property="og:url" content="https://indranil122.github.io/universal-llm-tokenizer/">
-  <meta property="og:image" content="https://indranil122.github.io/universal-llm-tokenizer/social-preview.png">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Universal LLM Tokenizer & Visualizer">
-  <meta name="twitter:description" content="See how AI models tokenize your text — live, color-coded, with exact token IDs. 14 models, zero dependencies, no API keys.">
-  <meta name="twitter:image" content="https://indranil122.github.io/universal-llm-tokenizer/social-preview.png">
-
+  <title>Universal LLM Tokenizer & Visualizer</title>
+  <meta name="description" content="Interactive visualizer showing how text, code, emojis, and non-English words are converted into subword tokens for GPT-5, Llama 4, Claude, Gemini 3, DeepSeek & 15 models.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
 </head>
 <body>
@@ -28,97 +14,86 @@
   <!-- Header Section -->
   <header class="app-header">
     <div class="header-container">
-      <a href="index.html" class="logo-link" style="text-decoration: none; color: inherit;">
+      <a href="index.html" class="logo-link">
         <div class="logo-group">
-          <div class="logo-icon">🤖</div>
           <div class="logo-text">
-            <h1>Universal LLM Tokenizer</h1>
-            <p>Real-Time Prompt Tokenization & Subword Visualizer</p>
+            <h1>UNIVERSAL LLM TOKENIZER</h1>
+            <p>REAL-TIME PROMPT TOKENIZATION / SUBWORD VISUALIZER</p>
           </div>
         </div>
       </a>
 
       <nav class="nav-tabs">
-        <button id="tabPlayground" class="tab-btn active">
-          <span>⚡</span> Live Playground
-        </button>
-        <button id="tabCompare" class="tab-btn">
-          <span>🔄</span> Compare Models
-        </button>
-        <button id="tabStepBPE" class="tab-btn">
-          <span>⏯️</span> BPE Step Engine
-        </button>
-        <button id="tabBattle" class="tab-btn">
-          <span>⚔️</span> All Models
-        </button>
+        <button id="tabPlayground" class="tab-btn active">[ LIVE PLAYGROUND ]</button>
+        <button id="tabCompare" class="tab-btn">[ COMPARE MODELS ]</button>
+        <button id="tabStepBPE" class="tab-btn">[ BPE STEP ENGINE ]</button>
+        <button id="tabBattle" class="tab-btn">[ ALL MODELS ]</button>
       </nav>
 
       <div class="header-github">
-        <button id="btnCheckUpdates" class="preset-btn" style="display: inline-flex; align-items: center; gap: 0.5rem; border-radius: var(--radius-md);">
-          <svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor">
-            <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
-          </svg>
-          Check Live Updates
+        <button id="btnCheckUpdates" class="preset-btn">
+          [ CHECK LIVE UPDATES ]
         </button>
         <span id="githubUpdateStatus" class="update-status" style="display: none;"></span>
         <a href="https://github.com/indranil122/universal-llm-tokenizer" target="_blank" class="github-btn" title="View Source on GitHub">
-          <span class="github-btn-text">GitHub</span>
+          <span class="github-btn-text">SOURCE // GITHUB</span>
         </a>
       </div>
     </div>
   </header>
 
   <!-- Main Container -->
-  <main class="main-wrapper">
+  <main class="main-wrapper brutalist-wrapper">
 
     <!-- Control & Preset Bar -->
     <section class="control-bar">
       <div class="model-select-group">
-        <span class="control-label">Target LLM Model:</span>
+        <span class="control-label">TARGET LLM MODEL:</span>
         <select id="modelSelect" class="select-dropdown">
           <optgroup label="OpenAI">
-            <option value="gpt-4o" selected>OpenAI GPT-4o / GPT-4o-mini (o200k_base - 200k)</option>
-            <option value="gpt-4">OpenAI GPT-4 / GPT-3.5 Turbo (cl100k_base - 100k)</option>
-            <option value="gpt-3">OpenAI GPT-3 / GPT-2 / Codex (p50k / r50k - 50k)</option>
+            <option value="gpt-5" selected>OpenAI GPT-5 / GPT-5.x (o200k_base - 200k) ⭐ Current</option>
+            <option value="gpt-4o">OpenAI GPT-4o / GPT-4o-mini (o200k_base - 200k, legacy)</option>
+            <option value="gpt-4">OpenAI GPT-4 / GPT-3.5 Turbo (cl100k_base - 100k, legacy)</option>
+            <option value="gpt-3">OpenAI GPT-3 / GPT-2 / Codex (p50k / r50k - 50k, legacy)</option>
           </optgroup>
           <optgroup label="Meta AI">
-            <option value="llama-3">Meta Llama 3.3 / 3.2 / 3.1 (128k Tiktoken BPE)</option>
-            <option value="llama-2">Meta Llama 2 / Llama 1 (32k SentencePiece)</option>
+            <option value="llama-4">Meta Llama 4 Scout / Maverick (Llama 3 128k Tiktoken BPE)</option>
+            <option value="llama-2">Meta Llama 2 / Llama 1 (32k SentencePiece, legacy)</option>
           </optgroup>
           <optgroup label="Anthropic">
-            <option value="claude-3-5">Anthropic Claude 3.5 Sonnet / Haiku (100k+ BPE)</option>
-            <option value="claude-3-opus">Anthropic Claude 3 Opus (100k+ BPE)</option>
+            <option value="claude-opus-5">Anthropic Claude Opus 5 (100k+ BPE)</option>
+            <option value="claude-sonnet-5">Anthropic Claude Sonnet 5 (100k+ BPE)</option>
           </optgroup>
           <optgroup label="Google DeepMind">
-            <option value="gemini-2-flash">Google Gemini 2.0 Flash / 1.5 Pro (256k Unigram)</option>
-            <option value="bert">Google BERT (WordPiece 30k)</option>
+            <option value="gemini-3-pro">Google Gemini 3 Pro / 3 Flash (256k Unigram)</option>
+            <option value="bert">Google BERT (WordPiece 30k, legacy)</option>
           </optgroup>
           <optgroup label="DeepSeek AI">
-            <option value="deepseek-r1">DeepSeek R1 / DeepSeek V3 (128k Byte-fallback)</option>
+            <option value="deepseek-v4">DeepSeek V4 / V3.2 (128k Byte-fallback)</option>
           </optgroup>
           <optgroup label="Alibaba Cloud">
-            <option value="qwen-2-5">Alibaba Qwen 2.5 / Qwen Coder (151k BPE)</option>
+            <option value="qwen-3-5">Alibaba Qwen 3.5 / Qwen Coder (151k BPE)</option>
           </optgroup>
           <optgroup label="Mistral AI">
-            <option value="mistral-large">Mistral Large / Mixtral (Tekken BPE)</option>
+            <option value="mistral-large-3">Mistral Large 3 (Tekken BPE)</option>
           </optgroup>
           <optgroup label="xAI">
-            <option value="grok-2">xAI Grok 2 / Grok 1.5 (131k BPE)</option>
+            <option value="grok-4">xAI Grok 4 / Grok 4.5 (131k BPE)</option>
           </optgroup>
           <optgroup label="Cohere">
-            <option value="cohere-command-r">Cohere Command R+ (256k BPE)</option>
+            <option value="cohere-command-a">Cohere Command A+ (256k BPE)</option>
           </optgroup>
         </select>
         <span id="exactBadge" class="exact-badge hidden"></span>
       </div>
 
       <div class="preset-buttons">
-        <span class="control-label">Presets:</span>
-        <button class="preset-btn" data-preset="code">💻 Code</button>
-        <button class="preset-btn" data-preset="multilingual">🌍 Multilingual</button>
-        <button class="preset-btn" data-preset="emoji">😃 Emojis</button>
-        <button class="preset-btn" data-preset="numbers">🔢 Numbers</button>
-        <button class="preset-btn" data-preset="glitch">⚠️ System Tags</button>
+        <span class="control-label">PRESETS:</span>
+        <button class="preset-btn" data-preset="code">[ CODE ]</button>
+        <button class="preset-btn" data-preset="multilingual">[ MULTILINGUAL ]</button>
+        <button class="preset-btn" data-preset="emoji">[ EMOJIS ]</button>
+        <button class="preset-btn" data-preset="numbers">[ NUMBERS ]</button>
+        <button class="preset-btn" data-preset="glitch">[ SYSTEM TAGS ]</button>
       </div>
     </section>
 
@@ -129,17 +104,14 @@
         <!-- Left: Prompt Text Editor with Synchronized Highlight Backdrop -->
         <article class="card-panel">
           <div class="card-header">
-            <h2 class="card-title">
-              <span>✍️</span> Prompt Text Input
-            </h2>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">Type or edit prompt below</span>
+            <h2 class="card-title">INPUT // PROMPT TEXT</h2>
           </div>
           <div class="card-body">
             <div class="editor-sync-container">
               <!-- Backdrop layer for highlighting prompt words -->
               <div id="highlightBackdrop" class="highlight-backdrop"></div>
               <!-- User Textarea Input -->
-              <textarea id="promptInput" class="prompt-textarea" placeholder="Type prompt words here to watch them tokenize live..." spellcheck="false">Hello World! How does AI convert human text into tokens? Let's check: tokenization, def main(): and 🤖 emojis!</textarea>
+              <textarea id="promptInput" class="prompt-textarea" placeholder="TYPE PROMPT WORDS HERE TO WATCH THEM TOKENIZE LIVE..." spellcheck="false">Hello World! How does AI convert human text into tokens? Let's check: tokenization, def main(): and 🤖 emojis!</textarea>
             </div>
           </div>
         </article>
@@ -147,11 +119,8 @@
         <!-- Right: Real-time Color-Coded Tokens Visualizer -->
         <article class="card-panel">
           <div class="card-header">
-            <h2 class="card-title">
-              <span>🧩</span> Output Tokens Visualizer
-            </h2>
-            <span style="font-size: 0.75rem; color: var(--text-muted);">Hover tokens to highlight prompt words</span>
-            <button id="viewToggle" class="view-toggle" title="Switch between token pills and byte-length bars">▦ Token Bars</button>
+            <h2 class="card-title">OUTPUT // TOKENS VISUALIZER</h2>
+            <button id="viewToggle" class="view-toggle" title="Switch between token pills and byte-length bars">[ VIEW: BARS ]</button>
           </div>
           <div class="card-body">
             <div id="tokensDisplayBox" class="tokens-display-box"></div>
@@ -163,32 +132,31 @@
       <!-- Side-by-Side Dual Model Comparison (Hidden by default) -->
       <section id="compareContainer" class="card-panel hidden" style="margin-top: 1.5rem;">
         <div class="card-header">
-          <h2 class="card-title">
-            <span>🔄</span> Model B Comparison View
-          </h2>
+          <h2 class="card-title">OUTPUT // MODEL B COMPARISON</h2>
           <div class="model-select-group">
-            <span class="control-label">Compare With:</span>
+            <span class="control-label">COMPARE WITH:</span>
             <select id="compareModelSelect" class="select-dropdown">
               <optgroup label="Meta AI">
-                <option value="llama-3" selected>Meta Llama 3.3 / 3.2 (128k BPE)</option>
-                <option value="llama-2">Meta Llama 2 (32k SentencePiece)</option>
+                <option value="llama-4" selected>Meta Llama 4 Scout / Maverick (128k BPE)</option>
+                <option value="llama-2">Meta Llama 2 (32k SentencePiece, legacy)</option>
               </optgroup>
               <optgroup label="OpenAI">
+                <option value="gpt-5">OpenAI GPT-5 (o200k_base)</option>
                 <option value="gpt-4o">OpenAI GPT-4o (o200k_base)</option>
-                <option value="gpt-4">OpenAI GPT-4 / 3.5 (cl100k_base)</option>
+                <option value="gpt-4">OpenAI GPT-4 / 3.5 (cl100k_base, legacy)</option>
               </optgroup>
               <optgroup label="Anthropic">
-                <option value="claude-3-5">Anthropic Claude 3.5 Sonnet</option>
+                <option value="claude-sonnet-5">Anthropic Claude Sonnet 5</option>
               </optgroup>
               <optgroup label="Google">
-                <option value="gemini-2-flash">Google Gemini 2.0 Flash</option>
+                <option value="gemini-3-pro">Google Gemini 3 Pro / Flash</option>
                 <option value="bert">Google BERT (WordPiece)</option>
               </optgroup>
               <optgroup label="DeepSeek AI">
-                <option value="deepseek-r1">DeepSeek R1 / V3 (128k BPE)</option>
+                <option value="deepseek-v4">DeepSeek V4 / V3.2 (128k BPE)</option>
               </optgroup>
               <optgroup label="Alibaba">
-                <option value="qwen-2-5">Alibaba Qwen 2.5</option>
+                <option value="qwen-3-5">Alibaba Qwen 3.5</option>
               </optgroup>
             </select>
           </div>
@@ -201,27 +169,27 @@
       <!-- Metrics & Stats Dashboard -->
       <section class="metrics-bar">
         <div class="metric-card">
-          <div class="metric-label">Total Tokens</div>
+          <div class="metric-label">TOTAL TOKENS</div>
           <div id="tokenCount" class="metric-value">0</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Prompt Words</div>
+          <div class="metric-label">PROMPT WORDS</div>
           <div id="wordCount" class="metric-value">0</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Characters</div>
+          <div class="metric-label">CHARACTERS</div>
           <div id="charCount" class="metric-value">0</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Token Efficiency</div>
+          <div class="metric-label">EFFICIENCY RATIO</div>
           <div id="ratioCount" class="metric-value">0.00</div>
         </div>
         <div class="metric-card">
-          <div class="metric-label">Est. Cost (1M Tokens)</div>
+          <div class="metric-label">EST. COST (1M)</div>
           <div id="costEstimate" class="metric-value">$0.00</div>
         </div>
         <div class="metric-card metric-card-context">
-          <div class="metric-label">Context Window Used</div>
+          <div class="metric-label">CONTEXT WINDOW</div>
           <div class="context-meter">
             <div class="context-meter-track"><div id="contextBar" class="context-meter-fill"></div></div>
             <span id="contextLabel" class="metric-value context-value">0.00%</span>
@@ -230,21 +198,19 @@
       </section>
 
       <section class="script-section">
-        <h3 class="section-title"><span>🌐</span> Scripts Detected</h3>
-        <div id="scriptChips" class="script-chips"><span class="script-chip muted">Type text to detect scripts</span></div>
+        <h3 class="section-title">LANG // SCRIPTS DETECTED</h3>
+        <div id="scriptChips" class="script-chips"><span class="script-chip muted">AWAITING TEXT INPUT...</span></div>
       </section>
 
       <!-- Prompt Word to Token Mapping Matrix Table -->
       <section class="mapping-section">
-        <h3 class="section-title">
-          <span>📊</span> Prompt Word ➔ Token Breakdown Matrix
-        </h3>
+        <h3 class="section-title">DATA // PROMPT WORD BREAKDOWN MATRIX</h3>
         <table class="mapping-table">
           <thead>
             <tr>
-              <th>Prompt Word</th>
-              <th>Generated Tokens (Subwords & IDs)</th>
-              <th>Token Count</th>
+              <th>PROMPT WORD</th>
+              <th>GENERATED TOKENS</th>
+              <th>COUNT</th>
             </tr>
           </thead>
           <tbody id="mappingTableBody">
@@ -259,10 +225,7 @@
     <div id="bpeStepView" class="hidden">
       <article class="card-panel">
         <div class="card-header">
-          <h2 class="card-title">
-            <span>⏯️</span> Step-by-Step Byte-Pair Encoding (BPE) Merger
-          </h2>
-          <span style="font-size: 0.8rem; color: var(--text-secondary);">Watch raw characters merge into subwords step by step</span>
+          <h2 class="card-title">PROCESS // BPE STEP MERGER</h2>
         </div>
         <div class="card-body">
           <div id="bpeStepsContainer" class="bpe-step-container">
@@ -276,8 +239,7 @@
     <div id="battleView" class="hidden">
       <article class="card-panel">
         <div class="card-header">
-          <h2 class="card-title"><span>⚔️</span> All-Models Token Battle</h2>
-          <span style="font-size: 0.8rem; color: var(--text-secondary);">Same prompt, every model — fewest tokens wins. Click a row to make it the active model.</span>
+          <h2 class="card-title">DIAGNOSTIC // ALL-MODELS BATTLE</h2>
         </div>
         <div class="card-body">
           <div id="battleTableWrap"></div>
@@ -289,29 +251,29 @@
 
   <!-- Floating Hover Tooltip Popover -->
   <div id="tokenPopover" class="token-popover">
-    <div class="popover-header" id="popoverSubword">Token</div>
-    <div class="popover-row"><span class="popover-key">Token ID:</span><span id="popoverId" class="popover-val">0</span></div>
-    <div class="popover-row"><span class="popover-key">Hex Bytes:</span><span id="popoverHex" class="popover-val">0x00</span></div>
-    <div class="popover-row"><span class="popover-key">UTF-8 Dec:</span><span id="popoverBytes" class="popover-val">[0]</span></div>
-    <div class="popover-row"><span class="popover-key">Char Range:</span><span id="popoverRange" class="popover-val">0 – 0</span></div>
+    <div class="popover-header" id="popoverSubword">TOKEN</div>
+    <div class="popover-row"><span class="popover-key">TOKEN ID:</span><span id="popoverId" class="popover-val">0</span></div>
+    <div class="popover-row"><span class="popover-key">HEX BYTES:</span><span id="popoverHex" class="popover-val">0x00</span></div>
+    <div class="popover-row"><span class="popover-key">UTF-8 DEC:</span><span id="popoverBytes" class="popover-val">[0]</span></div>
+    <div class="popover-row"><span class="popover-key">CHAR RANGE:</span><span id="popoverRange" class="popover-val">0 – 0</span></div>
   </div>
 
   <!-- GitHub Update Modal -->
   <div id="githubModalOverlay" class="modal-overlay hidden">
-    <div class="modal-box">
+    <div class="modal-box brutalist-modal">
       <div class="modal-header">
-        <h3>Live GitHub Updates</h3>
-        <button id="closeModalBtn" class="close-btn">&times;</button>
+        <h3>SYS // GITHUB UPDATES</h3>
+        <button id="closeModalBtn" class="close-btn">[ X ]</button>
       </div>
       <div class="modal-body" id="githubModalBody">
-        Loading latest commit data...
+        FETCHING DATA...
       </div>
     </div>
   </div>
 
   <!-- Footer -->
   <footer class="app-footer">
-    <p>Universal LLM Tokenizer & Visualizer • Powered by Byte-Pair Encoding, WordPiece & SentencePiece Engines</p>
+    <p>UNIVERSAL LLM TOKENIZER // SYS.DESIGN: BRUTALIST UI</p>
   </footer>
 
   <!-- Tokenizer Scripts -->

@@ -90,8 +90,20 @@ window.TOKENIZER_VOCABS = (() => {
   return {
     bpeRegex,
     models: {
+      "gpt-5": {
+        name: "OpenAI GPT-5 / GPT-5.x family",
+        family: "Byte-Pair Encoding (o200k_base)",
+        vocabSize: "200,000",
+        vocabMap: gpt4oMap,
+        contextWindow: 400000,
+        exact: true,
+        tiktokenData: "o200k_base",
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 1.25, output: 10.00 }
+      },
       "gpt-4o": {
-        name: "OpenAI GPT-4o / GPT-4o-mini",
+        name: "OpenAI GPT-4o / GPT-4o-mini (legacy API)",
         family: "Byte-Pair Encoding (o200k_base)",
         vocabSize: "200,000",
         vocabMap: gpt4oMap,
@@ -103,7 +115,7 @@ window.TOKENIZER_VOCABS = (() => {
         costPer1M: { input: 2.50, output: 10.00 }
       },
       "gpt-4": {
-        name: "OpenAI GPT-4 / GPT-3.5 Turbo",
+        name: "OpenAI GPT-4 / GPT-3.5 Turbo (legacy)",
         family: "Byte-Pair Encoding (cl100k_base)",
         vocabSize: "100,000",
         vocabMap: gpt4Map,
@@ -114,20 +126,20 @@ window.TOKENIZER_VOCABS = (() => {
         tiktokenData: "cl100k_base",
         costPer1M: { input: 5.00, output: 15.00 }
       },
-      "llama-3": {
-        name: "Meta Llama 3.3 / 3.2 / 3.1",
-        family: "Tiktoken BPE (128k)",
+      "llama-4": {
+        name: "Meta Llama 4 Scout / Maverick",
+        family: "Tiktoken BPE (Llama 3 128k)",
         vocabSize: "128,256",
         vocabMap: llama3Map,
-        contextWindow: 128000,
+        contextWindow: 1000000,
         exact: true,
         tiktokenData: "llama3",
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 0.15, output: 0.60 }
       },
-      "claude-3-5": {
-        name: "Anthropic Claude 3.5 Sonnet",
+      "claude-sonnet-5": {
+        name: "Anthropic Claude Sonnet 5",
         family: "Byte-Pair Encoding (Claude BPE)",
         vocabSize: "100,000+",
         vocabMap: gpt4Map,
@@ -136,47 +148,47 @@ window.TOKENIZER_VOCABS = (() => {
         contextWindow: 200000,
         costPer1M: { input: 3.00, output: 15.00 }
       },
-      "gemini-2-flash": {
-        name: "Google Gemini 2.0 Flash / 1.5 Pro",
+      "gemini-3-pro": {
+        name: "Google Gemini 3 Pro / 3 Flash",
         family: "SentencePiece (Unigram 256k)",
         vocabSize: "256,000",
         vocabMap: geminiMap,
         spaceChar: "▁", // SentencePiece space metastymbol (U+2581)
-        contextWindow: 1048576,
-        costPer1M: { input: 0.10, output: 0.40 }
+        contextWindow: 1000000,
+        costPer1M: { input: 2.00, output: 12.00 }
       },
-      "deepseek-r1": {
-        name: "DeepSeek R1 / DeepSeek V3",
+      "deepseek-v4": {
+        name: "DeepSeek V4 / V3.2",
         family: "Byte-Fallback BPE (128k)",
         vocabSize: "128,000",
         vocabMap: deepseekMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
-        contextWindow: 131072,
-        costPer1M: { input: 0.14, output: 0.55 }
+        contextWindow: 1000000,
+        costPer1M: { input: 0.28, output: 0.42 }
       },
-      "qwen-2-5": {
-        name: "Alibaba Qwen 2.5 / Qwen Coder",
+      "qwen-3-5": {
+        name: "Alibaba Qwen 3.5 / Qwen Coder",
         family: "Byte-Fallback BPE (151k)",
         vocabSize: "151,646",
         vocabMap: qwenMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
-        contextWindow: 131072,
+        contextWindow: 262144,
         costPer1M: { input: 0.20, output: 0.60 }
       },
-      "mistral-large": {
-        name: "Mistral Large / Mixtral",
-        family: "Tekken BPE (32k / 131k)",
-        vocabSize: "32,768",
+      "mistral-large-3": {
+        name: "Mistral Large 3 / Mistral Small",
+        family: "Tekken BPE (131k)",
+        vocabSize: "131,072",
         vocabMap: mistralMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
-        contextWindow: 131072,
+        contextWindow: 262144,
         costPer1M: { input: 2.00, output: 6.00 }
       },
       "gpt-3": {
-        name: "OpenAI GPT-3 / GPT-2 / Codex",
+        name: "OpenAI GPT-3 / GPT-2 / Codex (legacy)",
         family: "Byte-Pair Encoding (p50k / r50k)",
         vocabSize: "50,000",
         vocabMap: gpt3Map,
@@ -188,7 +200,7 @@ window.TOKENIZER_VOCABS = (() => {
         costPer1M: { input: 0.03, output: 0.06 }
       },
       "llama-2": {
-        name: "Meta Llama 2 / Llama 1",
+        name: "Meta Llama 2 / Llama 1 (legacy)",
         family: "SentencePiece (32k)",
         vocabSize: "32,000",
         vocabMap: llama2Map,
@@ -196,38 +208,38 @@ window.TOKENIZER_VOCABS = (() => {
         spaceChar: "▁",
         costPer1M: { input: 0.15, output: 0.60 }
       },
-      "claude-3-opus": {
-        name: "Anthropic Claude 3 Opus",
+      "claude-opus-5": {
+        name: "Anthropic Claude Opus 5",
         family: "Byte-Pair Encoding (Claude BPE)",
         vocabSize: "100,000+",
         vocabMap: claudeOpusMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
-        contextWindow: 200000,
-        costPer1M: { input: 15.00, output: 75.00 }
+        contextWindow: 1000000,
+        costPer1M: { input: 5.00, output: 25.00 }
       },
-      "grok-2": {
-        name: "xAI Grok 2 / Grok 1.5",
+      "grok-4": {
+        name: "xAI Grok 4 / Grok 4.5",
         family: "Byte-Pair Encoding (131k)",
         vocabSize: "131,000",
         vocabMap: grokMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
-        contextWindow: 131072,
-        costPer1M: { input: 2.00, output: 10.00 }
+        contextWindow: 500000,
+        costPer1M: { input: 3.00, output: 15.00 }
       },
-      "cohere-command-r": {
-        name: "Cohere Command R+",
+      "cohere-command-a": {
+        name: "Cohere Command A+",
         family: "Byte-Pair Encoding (256k)",
         vocabSize: "256,000",
         vocabMap: cohereMap,
         contextWindow: 131072,
         spaceChar: "Ġ",
         regex: bpeRegex,
-        costPer1M: { input: 2.50, output: 10.00 }
+        costPer1M: { input: 2.00, output: 8.00 }
       },
       "bert": {
-        name: "Google BERT (WordPiece)",
+        name: "Google BERT (WordPiece, legacy)",
         family: "WordPiece",
         vocabSize: "30,522",
         vocabMap: bertMap,
