@@ -6,7 +6,11 @@
   <title>Universal LLM Tokenizer - See How AI Reads Text</title>
   <meta name="description" content="An interactive, real-time visualizer for GPT-5, Llama 4, Claude, Gemini 3, and 15 LLM tokenizers.">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="landing.css?v=2">
+  <link rel="stylesheet" href="landing.css?v=3">
+  <script>
+    const savedTheme = localStorage.getItem('tokenizer-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </head>
 <body>
   <div class="brutalist-wrapper">
@@ -17,12 +21,13 @@
       <div class="meta-data">
         <span>STATUS: LIVE</span>
         <span>PARSING: 100% CLIENT-SIDE</span>
+        <button id="theme-toggle" class="theme-toggle-btn">TOGGLE DARK/LIGHT</button>
       </div>
     </header>
 
     <main class="hero-section">
-      <h1 class="hero-title">SEE HOW AI READS TEXT</h1>
-      <p class="hero-subtitle">INTERACTIVE VISUALIZER FOR GPT-4O, LLAMA 3, CLAUDE, GEMINI AND 15 OTHER LLM TOKENIZERS.</p>
+      <h1 class="hero-title">DECODE HOW AI READS YOUR WORDS</h1>
+      <p class="hero-subtitle">SEE EXACTLY HOW GPT-4, CLAUDE, LLAMA AND 15 OTHER MODELS SLICE UP YOUR TEXT INTO TOKENS IN REAL-TIME.</p>
 
       <div class="cta-container">
         <a href="app.html" class="btn-primary">LAUNCH_TOKENIZER</a>
@@ -47,6 +52,14 @@
           <p>No backend servers. No API keys. 100% local processing.</p>
         </div>
       </div>
+      </div>
+
+      <section class="how-it-works">
+        <h2 class="how-title">HOW IT ACTUALLY WORKS</h2>
+        <p class="how-text">
+          Think of a tokenizer as an AI's reading glasses. Before an AI can understand a sentence, it breaks the words down into smaller chunks called 'tokens'. Sometimes a token is a whole word, sometimes it's just a syllable or a single letter. This tool lets you see exactly how different AI models slice up your text behind the scenes.
+        </p>
+      </section>
     </main>
     
     <footer class="landing-footer">
@@ -54,5 +67,14 @@
       <div class="footer-col text-right">© 2026 UNIVERSAL TOKENIZER</div>
     </footer>
   </div>
+
+  <script>
+    document.getElementById('theme-toggle').addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('tokenizer-theme', newTheme);
+    });
+  </script>
 </body>
 </html>
