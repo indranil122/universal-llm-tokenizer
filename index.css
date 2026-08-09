@@ -76,6 +76,24 @@
   --token-border-5: #F4F4F0;
 }
 
+/* Dark theme: surfaces that are hardcoded #FFFFFF in light mode must flip
+   to dark, otherwise light theme text colors (--text-primary etc.) render
+   invisible on them. Token pills keep their own light chips — they read fine
+   on a dark canvas and mirror the light-theme pill palette. */
+[data-theme="dark"] .editor-sync-container,
+[data-theme="dark"] .tokens-display-box,
+[data-theme="dark"] .bpe-step-card,
+[data-theme="dark"] .token-popover,
+[data-theme="dark"] .modal-body {
+  background: var(--bg-card);
+}
+[data-theme="dark"] .context-meter-track {
+  background: var(--bg-card);
+}
+[data-theme="dark"] .prompt-textarea::placeholder {
+  color: #666666;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
