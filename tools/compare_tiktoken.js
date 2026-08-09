@@ -9,8 +9,6 @@ require("../tokenizers/tiktoken.js");
 const tk = require("tiktoken");
 const ours = window.TIKTOKEN_DATA;
 
-const REGEX = /(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+/gu;
-
 const encodings = ["cl100k_base", "o200k_base", "p50k_base"];
 
 const samples = [
@@ -27,7 +25,7 @@ const samples = [
 let allPass = true;
 for (const name of encodings) {
   const enc = tk.get_encoding(name);
-  const mine = new window.TiktokenTokenizer({ tiktokenData: ours[name], regex: REGEX });
+  const mine = new window.TiktokenTokenizer({ tiktokenData: ours[name] });
   for (const s of samples) {
     const expected = Array.from(enc.encode(s));
     const got = mine.tokenize(s).map(t => t.id);

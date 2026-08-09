@@ -102,11 +102,11 @@ function linesToText(entries, rankMode) {
     .join("\n");
 }
 
-function emit(name, rankEntries, vocabEntries, special) {
+function emit(name, rankEntries, vocabEntries, special, patStr) {
   // For tiktoken files rank === id, so vocab is redundant with ranks — emit once
   const same = rankEntries.length === vocabEntries.length &&
     rankEntries.every((e, i) => vocabEntries[i] && e.key === vocabEntries[i].key && e.id === vocabEntries[i].id);
-  const js = `// Auto-generated from real tokenizer data by tools/convert_vocab.js — do not edit.\nwindow.TIKTOKEN_DATA = window.TIKTOKEN_DATA || {};\nwindow.TIKTOKEN_DATA[${JSON.stringify(name)}] = {\n  ranks: ${JSON.stringify(linesToText(rankEntries, true))}${same ? "" : `,\n  vocab: ${JSON.stringify(linesToText(vocabEntries, false))}`},\n  special: ${JSON.stringify(special)}\n};\n`;
+  const js = `// Auto-generated from real tokenizer data by tools/convert_vocab.js — do not edit.\nwindow.TIKTOKEN_DATA = window.TIKTOKEN_DATA || {};\nwindow.TIKTOKEN_DATA[${JSON.stringify(name)}] = {\n  ranks: ${JSON.stringify(linesToText(rankEntries, true))}${same ? "" : `,\n  vocab: ${JSON.stringify(linesToText(vocabEntries, false))}`},\n  patStr: ${JSON.stringify(patStr)},\n  special: ${JSON.stringify(special)}\n};\n`;
   fs.writeFileSync(path.join(OUT, name + ".js"), js);
   const kb = (fs.statSync(path.join(OUT, name + ".js")).size / 1024).toFixed(0);
   console.log(`${name}.js  ${kb} KB  (${vocabEntries.length} vocab, ${rankEntries.length} ranks, ${Object.keys(special).length} special)`);
@@ -114,28 +114,39 @@ function emit(name, rankEntries, vocabEntries, special) {
 
 fs.mkdirSync(OUT, { recursive: true });
 
-// OpenAI tiktoken files: rank === id, so ranks and vocab are identical
+// OpenAI tiktoken files: rank === id, so ranks and vocab are identical.
+// pat_str + special_tokens are the authoritative per-encoding values used by
+// the official tiktoken registry (openai/tiktoken registry.json).
+const GPT2_PAT = "(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+";
+const O200K_PAT = "[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?:'s|'t|'re|'ve|'m|'ll|'d)?|[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?:'s|'t|'re|'ve|'m|'ll|'d)?|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n/]*|\s*[\r\n]+|\s+(?!\S)|\s+";
+const P50K_PAT = "'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+";
+
+const tiktokenConfigs = {
+  o200k_base: {
+    special: { "<|endoftext|>": 199999, "<|endofprompt|>": 200018, "<|im_start|>": 200000, "<|im_end|>": 200001 },
+    patStr: O200K_PAT
+  },
+  cl100k_base: {
+    special: { "<|endoftext|>": 100257, "<|fim_prefix|>": 100258, "<|fim_middle|>": 100259, "<|fim_suffix|>": 100260, "<|endofprompt|>": 100276, "<|im_start|>": 100264, "<|im_end|>": 100265 },
+    patStr: GPT2_PAT
+  },
+  p50k_base: {
+    special: { "<|endoftext|>": 50256 },
+    patStr: P50K_PAT
+  }
+};
+
 for (const name of ["o200k_base", "cl100k_base", "p50k_base"]) {
   const entries = parseTiktoken(path.join(RAW, name + ".tiktoken"));
-  const special = {};
-  if (name === "o200k_base") {
-    special["<|endoftext|>"] = 199999;
-    special["<|im_start|>"] = 200000;
-    special["<|im_end|>"] = 200001;
-  } else if (name === "cl100k_base") {
-    special["<|endoftext|>"] = 100257;
-    special["<|im_start|>"] = 100264;
-    special["<|im_end|>"] = 100265;
-  } else {
-    special["<|endoftext|>"] = 50256;
-  }
-  emit(name, entries, entries, special);
+  const { special, patStr } = tiktokenConfigs[name];
+  emit(name, entries, entries, special, patStr);
 }
 
-// Llama 3: merge ranks come from the merges array, ids from the vocab
+// Llama 3: merge ranks come from the merges array, ids from the vocab.
+// Its pre_tokenizer regex is the GPT-2 pattern (from tokenizer.json).
 {
   const { rankEntries, vocabEntries, special } = parseHfTokenizer(path.join(RAW, "llama3_tokenizer.json"));
-  emit("llama3", rankEntries, vocabEntries, special);
+  emit("llama3", rankEntries, vocabEntries, special, GPT2_PAT);
 }
 
 console.log("Done. Raw files can be deleted: tokenizers/data/raw/");

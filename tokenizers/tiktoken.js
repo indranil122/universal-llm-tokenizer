@@ -58,9 +58,23 @@
       this.modelConfig = modelConfig;
       this.data = modelConfig.tiktokenData;
       this.specialTokens = this.data.special || {};
-      this.regex = modelConfig.regex ||
-        (window.TOKENIZER_VOCABS && window.TOKENIZER_VOCABS.bpeRegex);
+      // The per-encoding pat_str (from the official registry) is authoritative
+      // for exact models; a model-level regex is only a fallback.
+      this.regex = this.data.patStr
+        ? this._compilePatStr(this.data.patStr)
+        : (modelConfig.regex || (window.TOKENIZER_VOCABS && window.TOKENIZER_VOCABS.bpeRegex));
       this._ensureParsed();
+    }
+
+    _compilePatStr(patStr) {
+      // JS has no inline (?i: flag — convert to (?: (equivalent for the
+      // contraction groups used by tiktoken patterns)
+      const src = (patStr || "").replace(/\(\?i:/g, "(?:");
+      try {
+        return new RegExp(src, "gu");
+      } catch (e) {
+        return window.TOKENIZER_VOCABS && window.TOKENIZER_VOCABS.bpeRegex;
+      }
     }
 
     _ensureParsed() {
@@ -206,15 +220,20 @@
     }
 
     _encodeChunkToKeys(chunk) {
-      // byte-level char per byte + byte-index -> char-index map
+      // byte-level char per byte + byte-index -> char-index map.
+      // IMPORTANT: encode by code point so surrogate pairs (emoji) are not
+      // mangled into replacement characters.
       const keys = [];
       const charIdxAt = [];
-      for (let i = 0; i < chunk.length; i++) {
-        const cb = new TextEncoder().encode(chunk[i]);
+      for (let i = 0; i < chunk.length; ) {
+        const cp = chunk.codePointAt(i);
+        const units = cp > 0xffff ? 2 : 1;
+        const cb = new TextEncoder().encode(String.fromCodePoint(cp));
         for (let b = 0; b < cb.length; b++) {
           charIdxAt.push(i);
           keys.push(byteToChar.get(cb[b]));
         }
+        i += units;
       }
       return { keys, charIdxAt };
     }
