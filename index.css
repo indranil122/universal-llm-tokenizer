@@ -685,3 +685,216 @@ body {
     height: 180px;
   }
 }
+
+/* ==========================================================================
+   New features: exact engine routing, context meter, script chips,
+   token bars, and the all-models battle table
+   ========================================================================== */
+
+.exact-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--accent-emerald);
+  background: rgba(52, 211, 153, 0.1);
+  border: 1px solid rgba(52, 211, 153, 0.35);
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.view-toggle {
+  font-family: var(--font-main);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast), color var(--transition-fast), background var(--transition-fast);
+}
+.view-toggle:hover {
+  border-color: var(--border-active);
+  color: var(--accent-cyan);
+}
+
+.metric-card-context {
+  min-width: 280px;
+  flex: 1.4;
+}
+
+.context-meter {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+}
+.context-meter-track {
+  flex: 1;
+  height: 8px;
+  background: var(--border-color);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.context-meter-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, var(--accent-emerald), var(--accent-cyan));
+  border-radius: 999px;
+  transition: width 0.35s ease;
+}
+.context-meter-fill.warn {
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+}
+.context-meter-fill.danger {
+  background: linear-gradient(90deg, #ef4444, #f87171);
+}
+.context-value {
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.context-value.danger-text {
+  color: #f87171;
+}
+
+.script-section {
+  margin-top: 1.2rem;
+}
+.script-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.script-chip {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.3rem 0.75rem;
+  border-radius: 999px;
+}
+.script-chip.muted {
+  color: var(--text-muted);
+  font-weight: 400;
+}
+
+.loading-hint {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  padding: 0.5rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.loading-hint code {
+  font-family: var(--font-code);
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-sm);
+}
+
+/* Token bars mode */
+.tokens-display-box.bar-mode {
+  display: block;
+}
+.token-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  min-height: 72px;
+  padding: 0.5rem 0.25rem;
+  flex-wrap: wrap;
+}
+.token-bar {
+  height: 28px;
+  border-radius: 3px;
+  cursor: pointer;
+  opacity: 0.85;
+  transition: transform var(--transition-fast), box-shadow var(--transition-fast), opacity var(--transition-fast);
+}
+.token-bar[data-color="0"] { background: var(--token-color-0); }
+.token-bar[data-color="1"] { background: var(--token-color-1); }
+.token-bar[data-color="2"] { background: var(--token-color-2); }
+.token-bar[data-color="3"] { background: var(--token-color-3); }
+.token-bar[data-color="4"] { background: var(--token-color-4); }
+.token-bar[data-color="5"] { background: var(--token-color-5); }
+.token-bar:hover,
+.token-bar.hovered {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45);
+  opacity: 1;
+}
+
+/* Battle table */
+.battle-note {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+}
+.battle-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+.battle-table th {
+  text-align: left;
+  padding: 0.6rem 0.75rem;
+  color: var(--text-muted);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+.battle-table td {
+  padding: 0.6rem 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+.battle-table tbody tr {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+.battle-table tbody tr:hover {
+  background: var(--bg-card-hover);
+}
+.battle-table .battle-row-active {
+  background: rgba(56, 189, 248, 0.08);
+}
+.battle-table .battle-row-active td {
+  color: var(--text-primary);
+}
+.battle-mono {
+  font-family: var(--font-code);
+}
+.battle-strong {
+  color: var(--text-primary);
+  font-weight: 700;
+}
+.exact-tag {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-emerald);
+  border: 1px solid rgba(52, 211, 153, 0.4);
+  border-radius: 999px;
+  padding: 0.08rem 0.4rem;
+  margin-left: 0.35rem;
+  vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+  .metric-card-context {
+    min-width: 100%;
+  }
+  .battle-table {
+    font-size: 0.72rem;
+  }
+  .battle-table th,
+  .battle-table td {
+    padding: 0.45rem 0.5rem;
+  }
+}
+

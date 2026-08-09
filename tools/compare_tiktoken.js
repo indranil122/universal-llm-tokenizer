@@ -20,6 +20,12 @@ const samples = [
   "नमस्ते दुनिया! こんにちは世界",
   "def calculate_tokens(prompt: str) -> list[int]:",
   "👨\u200d👩\u200d👧\u200d👦 family emoji!",
+  // case-insensitive contraction groups ((?i: in the official pat_str)
+  "I'M", "I'm", "YOU'RE", "IT'S", "DON'T", "THEY'LL", "'Tis", "She's running",
+  // more unicode scripts + edge cases
+  "مرحبا بالعالم", "Привет мир", "안녕하세요 세계", "Γειά σου κόσμε",
+  "café naïve Grüße", "Mixed 中文 and English", "a.b.c.d.e", "  spaced  out  ",
+  "1 2 3 4 5", "tab\there", "newline\nhere", "\"quoted\" 'single'",
 ];
 
 let allPass = true;

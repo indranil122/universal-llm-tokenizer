@@ -48,6 +48,9 @@
         <button id="tabStepBPE" class="tab-btn">
           <span>⏯️</span> BPE Step Engine
         </button>
+        <button id="tabBattle" class="tab-btn">
+          <span>⚔️</span> All Models
+        </button>
       </nav>
     </div>
   </header>
@@ -93,6 +96,7 @@
             <option value="cohere-command-r">Cohere Command R+ (256k BPE)</option>
           </optgroup>
         </select>
+        <span id="exactBadge" class="exact-badge hidden"></span>
       </div>
 
       <div class="preset-buttons">
@@ -134,6 +138,7 @@
               <span>🧩</span> Output Tokens Visualizer
             </h2>
             <span style="font-size: 0.75rem; color: var(--text-muted);">Hover tokens to highlight prompt words</span>
+            <button id="viewToggle" class="view-toggle" title="Switch between token pills and byte-length bars">▦ Token Bars</button>
           </div>
           <div class="card-body">
             <div id="tokensDisplayBox" class="tokens-display-box"></div>
@@ -202,6 +207,18 @@
           <div class="metric-label">Est. Cost (1M Tokens)</div>
           <div id="costEstimate" class="metric-value">$0.00</div>
         </div>
+        <div class="metric-card metric-card-context">
+          <div class="metric-label">Context Window Used</div>
+          <div class="context-meter">
+            <div class="context-meter-track"><div id="contextBar" class="context-meter-fill"></div></div>
+            <span id="contextLabel" class="metric-value context-value">0.00%</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="script-section">
+        <h3 class="section-title"><span>🌐</span> Scripts Detected</h3>
+        <div id="scriptChips" class="script-chips"><span class="script-chip muted">Type text to detect scripts</span></div>
       </section>
 
       <!-- Prompt Word to Token Mapping Matrix Table -->
@@ -242,6 +259,19 @@
       </article>
     </div>
 
+    <!-- All-Models Token Battle (Hidden by default) -->
+    <div id="battleView" class="hidden">
+      <article class="card-panel">
+        <div class="card-header">
+          <h2 class="card-title"><span>⚔️</span> All-Models Token Battle</h2>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Same prompt, every model — fewest tokens wins. Click a row to make it the active model.</span>
+        </div>
+        <div class="card-body">
+          <div id="battleTableWrap"></div>
+        </div>
+      </article>
+    </div>
+
   </main>
 
   <!-- Floating Hover Tooltip Popover -->
@@ -263,6 +293,7 @@
   <script src="tokenizers/bpe.js"></script>
   <script src="tokenizers/wordpiece.js"></script>
   <script src="tokenizers/sentencepiece.js"></script>
+  <script src="tokenizers/tiktoken.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

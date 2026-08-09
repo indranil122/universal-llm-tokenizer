@@ -1,7 +1,9 @@
 /**
  * Universal LLM Tokenizer & Visualizer - Main Controller
- * Handles real-time input tokenization, prompt word highlighting, 
- * side-by-side model comparison, and interactive BPE stepping.
+ * Handles real-time input tokenization, prompt word highlighting,
+ * side-by-side model comparison, interactive BPE stepping, exact
+ * tiktoken routing, token bars, context meter, script detection,
+ * and the all-models battle table.
  */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -11,6 +13,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let compareModelKey = "llama-3";
   let activeTokenizer = null;
   let compareTokenizer = null;
+  let viewMode = "pills"; // "pills" | "bars"
 
   // DOM Elements
   const promptInput = document.getElementById("promptInput");
@@ -27,6 +30,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const charCountElem = document.getElementById("charCount");
   const ratioCountElem = document.getElementById("ratioCount");
   const costEstimateElem = document.getElementById("costEstimate");
+  const contextBar = document.getElementById("contextBar");
+  const contextLabel = document.getElementById("contextLabel");
+  const scriptChips = document.getElementById("scriptChips");
+  const exactBadge = document.getElementById("exactBadge");
 
   // Mapping Table & Popover
   const mappingTableBody = document.getElementById("mappingTableBody");
@@ -36,47 +43,109 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabPlayground = document.getElementById("tabPlayground");
   const tabCompare = document.getElementById("tabCompare");
   const tabStepBPE = document.getElementById("tabStepBPE");
+  const tabBattle = document.getElementById("tabBattle");
 
   const playgroundView = document.getElementById("playgroundView");
   const bpeStepView = document.getElementById("bpeStepView");
+  const battleView = document.getElementById("battleView");
+  const battleTableWrap = document.getElementById("battleTableWrap");
+  const viewToggle = document.getElementById("viewToggle");
 
   // Current Tokens State
   let currentTokens = [];
   let currentCompareTokens = [];
+  let refreshVersion = 0;
+
+  // ==========================================
+  // Tokenizer Construction (async for exact models)
+  // ==========================================
+  function configFor(key) {
+    return modelConfigs[key] || modelConfigs["gpt-4o"];
+  }
+
+  function dataLoaded(key) {
+    const cfg = configFor(key);
+    return !(cfg.exact && window.loadTiktokenData && !(window.TIKTOKEN_DATA && window.TIKTOKEN_DATA[cfg.tiktokenData]));
+  }
+
+  async function ensureLoaded(key) {
+    const cfg = configFor(key);
+    if (cfg.exact && window.loadTiktokenData && !(window.TIKTOKEN_DATA && window.TIKTOKEN_DATA[cfg.tiktokenData])) {
+      await window.loadTiktokenData(cfg.tiktokenData);
+    }
+  }
+
+  function createTokenizer(key) {
+    const config = configFor(key);
+    let tok;
+    if (config.exact && window.TiktokenTokenizer && window.TIKTOKEN_DATA && window.TIKTOKEN_DATA[config.tiktokenData]) {
+      // exact: real vocabulary (o200k/cl100k/p50k/llama3) — byte-identical to official tiktoken
+      tok = new window.TiktokenTokenizer(Object.assign({}, config, { tiktokenData: window.TIKTOKEN_DATA[config.tiktokenData] }));
+    } else if (key === "bert" || config.family && config.family.includes("WordPiece")) {
+      tok = new window.WordPieceTokenizer(config);
+    } else if (key.includes("gemini") || key === "llama-2" || config.family && config.family.includes("SentencePiece")) {
+      tok = new window.SentencePieceTokenizer(config);
+    } else {
+      tok = new window.BPETokenizer(config);
+    }
+    tok._modelKey = key;
+    return tok;
+  }
 
   // ==========================================
   // Real-Time Tokenization & UI Sync
   // ==========================================
-  function updateTokenization() {
+  async function updateTokenization() {
+    const v = ++refreshVersion;
     const text = promptInput.value;
 
-    // Run active tokenizer
-    currentTokens = activeTokenizer.tokenize(text);
-
-    // 1. Render Token Pills
-    renderTokenPills(tokensDisplayBox, currentTokens);
-
-    // 2. Render Prompt Highlight Backdrop
-    renderPromptHighlights(text, currentTokens);
-
-    // 3. Render Prompt Word Mapping Table
-    renderMappingTable(text, currentTokens);
-
-    // 4. Update Metrics Bar
-    updateMetrics(text, currentTokens);
-
-    // 5. If Compare View is active, run compare tokenizer
-    if (!compareContainer.classList.contains("hidden")) {
-      currentCompareTokens = compareTokenizer.tokenize(text);
-      renderTokenPills(compareTokensDisplayBox, currentCompareTokens);
+    // Build/replace the active tokenizer (async when exact data needs loading)
+    if (activeTokenizer === null || activeTokenizer._modelKey !== activeModelKey) {
+      if (!dataLoaded(activeModelKey)) {
+        currentTokens = [];
+        const cfg = configFor(activeModelKey);
+        const sizes = { o200k_base: "3.6", cl100k_base: "1.5", p50k_base: "0.7", llama3: "4.2" };
+        tokensDisplayBox.innerHTML =
+          `<div class="loading-hint">⏳ Loading exact tokenizer data (<code>${cfg.tiktokenData}</code>, ` +
+          `~${sizes[cfg.tiktokenData] || "1"} MB) — one-time download…</div>`;
+      }
+      await ensureLoaded(activeModelKey);
+      if (v !== refreshVersion) return;
+      try { activeTokenizer = createTokenizer(activeModelKey); } catch (e) { activeTokenizer = createTokenizer("gpt-4o"); }
     }
 
-    // 6. Update BPE Step View if active
+    // Tokenize active model
+    let tokens = [];
+    try { tokens = activeTokenizer.tokenize(text); } catch (e) { tokens = []; }
+    currentTokens = tokens;
+
+    // Compare model (only when the compare panel is visible)
+    if (!compareContainer.classList.contains("hidden")) {
+      if (compareTokenizer === null || compareTokenizer._modelKey !== compareModelKey) {
+        await ensureLoaded(compareModelKey);
+        if (v !== refreshVersion) return;
+        compareTokenizer = createTokenizer(compareModelKey);
+      }
+      try { currentCompareTokens = compareTokenizer.tokenize(text); } catch (e) { currentCompareTokens = []; }
+    }
+
+    if (v !== refreshVersion) return;
+
+    // Render everything
+    renderTokenPills(tokensDisplayBox, currentTokens);
+    renderPromptHighlights(text, currentTokens);
+    renderMappingTable(text, currentTokens);
+    updateMetrics(text, currentTokens);
+    updateScriptChips(text);
+    if (!compareContainer.classList.contains("hidden")) {
+      renderTokenPills(compareTokensDisplayBox, currentCompareTokens);
+    }
     updateBPESteps(text);
+    updateExactBadge();
   }
 
   // ==========================================
-  // Render Token Pills
+  // Render Token Pills / Bars
   // ==========================================
   function renderTokenPills(container, tokens) {
     container.innerHTML = "";
@@ -85,6 +154,13 @@ document.addEventListener("DOMContentLoaded", () => {
       container.innerHTML = `<span style="color: var(--text-muted); font-size: 0.9rem;">Type or paste text above to see tokens live...</span>`;
       return;
     }
+
+    if (viewMode === "bars") {
+      renderTokenBars(container, tokens);
+      return;
+    }
+
+    container.classList.remove("bar-mode");
 
     tokens.forEach((token, idx) => {
       const pill = document.createElement("div");
@@ -118,6 +194,47 @@ document.addEventListener("DOMContentLoaded", () => {
       container.appendChild(pill);
     });
   }
+
+  function renderTokenBars(container, tokens) {
+    container.classList.add("bar-mode");
+    const wrap = document.createElement("div");
+    wrap.className = "token-bars";
+    const maxBytes = Math.max.apply(null, tokens.map(t => (t.bytes && t.bytes.length) || 1));
+
+    tokens.forEach((token, idx) => {
+      const bar = document.createElement("div");
+      bar.className = "token-bar";
+      bar.dataset.color = idx % 6;
+      bar.dataset.tokenIdx = idx;
+      // width proportional to byte length — longer subwords = wider bars
+      const w = Math.max(3, Math.round((((t.bytes && t.bytes.length) || 1) / maxBytes) * 100));
+      bar.style.width = w + "%";
+      bar.title = `${token.displaySubword || token.text}  (id ${token.id})`;
+
+      bar.addEventListener("mouseenter", (e) => {
+        bar.classList.add("hovered");
+        highlightPromptRange(token.start, token.end);
+        showPopover(e, token);
+      });
+      bar.addEventListener("mouseleave", () => {
+        bar.classList.remove("hovered");
+        clearPromptHighlights();
+        hidePopover();
+      });
+      wrap.appendChild(bar);
+    });
+
+    container.appendChild(wrap);
+  }
+
+  viewToggle.addEventListener("click", () => {
+    viewMode = viewMode === "pills" ? "bars" : "pills";
+    viewToggle.textContent = viewMode === "pills" ? "▦ Token Bars" : "🧩 Token Pills";
+    renderTokenPills(tokensDisplayBox, currentTokens);
+    if (!compareContainer.classList.contains("hidden")) {
+      renderTokenPills(compareTokensDisplayBox, currentCompareTokens);
+    }
+  });
 
   // ==========================================
   // Render Prompt Highlights behind Textarea
@@ -235,7 +352,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
-  // Metrics & Cost Calculator
+  // Metrics, Cost & Context Meter
   // ==========================================
   function updateMetrics(text, tokens) {
     const charCount = text.length;
@@ -248,11 +365,75 @@ document.addEventListener("DOMContentLoaded", () => {
     tokenCountElem.textContent = tokenCount.toLocaleString();
     ratioCountElem.textContent = `${ratio} tokens/word`;
 
-    // Estimate API Cost per 1M input tokens
-    const config = modelConfigs[activeModelKey];
+    const config = configFor(activeModelKey);
     if (config && config.costPer1M) {
       const estCost = ((tokenCount / 1000000) * config.costPer1M.input).toFixed(6);
       costEstimateElem.textContent = `$${estCost}`;
+    }
+
+    // Context window meter
+    const ctx = config && config.contextWindow;
+    if (ctx && contextBar && contextLabel) {
+      const pct = Math.min(100, (tokenCount / ctx) * 100);
+      contextBar.style.width = pct.toFixed(3) + "%";
+      contextLabel.textContent = `${pct.toFixed(2)}% / ${ctx.toLocaleString()}`;
+      contextBar.classList.toggle("warn", pct > 50 && pct <= 90);
+      contextBar.classList.toggle("danger", pct > 90);
+      contextLabel.classList.toggle("danger-text", pct > 90);
+    }
+  }
+
+  // ==========================================
+  // Script / Language Detection
+  // ==========================================
+  const SCRIPT_CHECKS = [
+    ["Latin", /[A-Za-z]/],
+    ["Devanagari", /[\u0900-\u097F]/],
+    ["CJK Han", /[\u3400-\u4DBF\u4E00-\u9FFF]/],
+    ["Hiragana", /[\u3040-\u309F]/],
+    ["Katakana", /[\u30A0-\u30FF]/],
+    ["Hangul", /[\uAC00-\uD7AF]/],
+    ["Arabic", /[\u0600-\u06FF]/],
+    ["Cyrillic", /[\u0400-\u04FF]/],
+    ["Greek", /[\u0370-\u03FF]/],
+    ["Thai", /[\u0E00-\u0E7F]/],
+    ["Hebrew", /[\u0590-\u05FF]/],
+    ["Tamil", /[\u0B80-\u0BFF]/],
+    ["Bengali", /[\u0980-\u09FF]/],
+    ["Emoji", /\p{Extended_Pictographic}/u],
+    ["Numbers", /\d/],
+  ];
+
+  function detectScripts(text) {
+    const found = [];
+    for (const [label, re] of SCRIPT_CHECKS) {
+      if (re.test(text)) found.push(label);
+    }
+    return found;
+  }
+
+  function updateScriptChips(text) {
+    if (!scriptChips) return;
+    scriptChips.innerHTML = "";
+    if (!text.trim()) {
+      scriptChips.innerHTML = `<span class="script-chip muted">Type text to detect scripts</span>`;
+      return;
+    }
+    detectScripts(text).forEach(s => {
+      const chip = document.createElement("span");
+      chip.className = "script-chip";
+      chip.textContent = s;
+      scriptChips.appendChild(chip);
+    });
+  }
+
+  function updateExactBadge() {
+    if (!exactBadge) return;
+    const cfg = configFor(activeModelKey);
+    exactBadge.classList.toggle("hidden", !cfg.exact);
+    if (cfg.exact) {
+      exactBadge.textContent = `✅ Exact — official ${cfg.tiktokenData} vocabulary`;
+      exactBadge.title = "This model uses the real vocabulary file — token IDs match official tiktoken.";
     }
   }
 
@@ -313,30 +494,80 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // ==========================================
+  // All-Models Battle Table
+  // ==========================================
+  async function renderBattle() {
+    const text = promptInput.value;
+    const total = Object.keys(modelConfigs).length;
+    battleTableWrap.innerHTML = `<div class="loading-hint">⚔️ Tokenizing with all ${total} models…</div>`;
+
+    // Preload any exact vocab data in parallel (one-time per encoding)
+    try {
+      const exactData = [...new Set(Object.values(modelConfigs).filter(c => c.exact && c.tiktokenData).map(c => c.tiktokenData))];
+      await Promise.all(exactData.map(d => (window.loadTiktokenData ? window.loadTiktokenData(d) : Promise.resolve())));
+    } catch (e) { /* fall back to approximate engine */ }
+
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const rows = [];
+
+    for (const [key, cfg] of Object.entries(modelConfigs)) {
+      let count = 0;
+      try { count = createTokenizer(key).tokenize(text).length; } catch (e) { count = 0; }
+      const ratio = words > 0 ? count / words : 0;
+      const cost = cfg.costPer1M ? (count / 1000000) * cfg.costPer1M.input : 0;
+      const ctxPct = cfg.contextWindow ? (count / cfg.contextWindow) * 100 : null;
+      rows.push({ key, cfg, count, ratio, cost, ctxPct });
+    }
+
+    rows.sort((a, b) => a.count - b.count);
+
+    let html = `<div class="battle-note">Sorted by <strong>fewest tokens</strong> (cheapest & fastest wins). 🏆 = lowest token count. Click a row to inspect it in the playground.</div>`;
+    html += `<table class="battle-table">
+      <thead><tr>
+        <th>#</th><th>Model</th><th>Tokenizer</th><th>Tokens</th><th>Tokens/Word</th><th>Est. Cost (input)</th><th>Context Used</th>
+      </tr></thead><tbody>`;
+
+    rows.forEach((r, i) => {
+      const active = r.key === activeModelKey ? ' class="battle-row-active"' : "";
+      const trophy = i === 0 && r.count > 0 ? " 🏆" : "";
+      html += `<tr${active} data-key="${r.key}">
+        <td>${i + 1}${trophy}</td>
+        <td>${r.cfg.name}${r.cfg.exact ? ` <span class="exact-tag" title="Real vocabulary — matches official tiktoken">EXACT</span>` : ""}</td>
+        <td class="battle-mono">${r.cfg.family}</td>
+        <td class="battle-mono battle-strong">${r.count.toLocaleString()}</td>
+        <td class="battle-mono">${r.ratio.toFixed(2)}</td>
+        <td class="battle-mono">$${r.cost.toFixed(4)}</td>
+        <td class="battle-mono">${r.ctxPct === null ? "—" : r.ctxPct.toFixed(2) + "%"}</td>
+      </tr>`;
+    });
+
+    html += `</tbody></table>`;
+    battleTableWrap.innerHTML = html;
+
+    battleTableWrap.querySelectorAll("tr[data-key]").forEach(tr => {
+      tr.addEventListener("click", () => {
+        activeModelKey = tr.dataset.key;
+        activeTokenizer = null;
+        modelSelect.value = activeModelKey;
+        switchTab("playground");
+      });
+    });
+  }
+
+  // ==========================================
   // Model Selectors & Event Listeners
   // ==========================================
   modelSelect.addEventListener("change", (e) => {
     activeModelKey = e.target.value;
-    activeTokenizer = createTokenizer(activeModelKey);
+    activeTokenizer = null;
     updateTokenization();
   });
 
   compareModelSelect.addEventListener("change", (e) => {
     compareModelKey = e.target.value;
-    compareTokenizer = createTokenizer(compareModelKey);
+    compareTokenizer = null;
     updateTokenization();
   });
-
-  function createTokenizer(key) {
-    const config = modelConfigs[key] || modelConfigs["gpt-4o"];
-    if (key === "bert" || config.family?.includes("WordPiece")) {
-      return new window.WordPieceTokenizer(config);
-    }
-    if (key.includes("gemini") || key === "llama-2" || config.family?.includes("SentencePiece")) {
-      return new window.SentencePieceTokenizer(config);
-    }
-    return new window.BPETokenizer(config);
-  }
 
   promptInput.addEventListener("input", updateTokenization);
 
@@ -369,10 +600,11 @@ document.addEventListener("DOMContentLoaded", () => {
   tabPlayground.addEventListener("click", () => switchTab("playground"));
   tabCompare.addEventListener("click", () => switchTab("compare"));
   tabStepBPE.addEventListener("click", () => switchTab("bpe"));
+  tabBattle.addEventListener("click", () => switchTab("battle"));
 
   function switchTab(tabName) {
-    [tabPlayground, tabCompare, tabStepBPE].forEach(btn => btn.classList.remove("active"));
-    [playgroundView, bpeStepView].forEach(view => view.classList.add("hidden"));
+    [tabPlayground, tabCompare, tabStepBPE, tabBattle].forEach(btn => btn.classList.remove("active"));
+    [playgroundView, bpeStepView, battleView].forEach(view => view.classList.add("hidden"));
 
     if (tabName === "playground") {
       tabPlayground.classList.add("active");
@@ -385,6 +617,11 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (tabName === "bpe") {
       tabStepBPE.classList.add("active");
       bpeStepView.classList.remove("hidden");
+    } else if (tabName === "battle") {
+      tabBattle.classList.add("active");
+      battleView.classList.remove("hidden");
+      renderBattle();
+      return;
     }
     updateTokenization();
   }
@@ -400,7 +637,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // Initial Run
-  activeTokenizer = createTokenizer(activeModelKey);
-  compareTokenizer = createTokenizer(compareModelKey);
+  activeTokenizer = null;
+  compareTokenizer = null;
   updateTokenization();
 });

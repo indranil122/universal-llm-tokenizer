@@ -95,6 +95,9 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Byte-Pair Encoding (o200k_base)",
         vocabSize: "200,000",
         vocabMap: gpt4oMap,
+        contextWindow: 128000,
+        exact: true,
+        tiktokenData: "o200k_base",
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 2.50, output: 10.00 }
@@ -106,6 +109,9 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: gpt4Map,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 8192,
+        exact: true,
+        tiktokenData: "cl100k_base",
         costPer1M: { input: 5.00, output: 15.00 }
       },
       "llama-3": {
@@ -113,6 +119,9 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Tiktoken BPE (128k)",
         vocabSize: "128,256",
         vocabMap: llama3Map,
+        contextWindow: 128000,
+        exact: true,
+        tiktokenData: "llama3",
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 0.15, output: 0.60 }
@@ -124,6 +133,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: gpt4Map,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 200000,
         costPer1M: { input: 3.00, output: 15.00 }
       },
       "gemini-2-flash": {
@@ -132,6 +142,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabSize: "256,000",
         vocabMap: geminiMap,
         spaceChar: "▁", // SentencePiece space metastymbol (U+2581)
+        contextWindow: 1048576,
         costPer1M: { input: 0.10, output: 0.40 }
       },
       "deepseek-r1": {
@@ -141,6 +152,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: deepseekMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 131072,
         costPer1M: { input: 0.14, output: 0.55 }
       },
       "qwen-2-5": {
@@ -150,6 +162,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: qwenMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 131072,
         costPer1M: { input: 0.20, output: 0.60 }
       },
       "mistral-large": {
@@ -159,6 +172,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: mistralMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 131072,
         costPer1M: { input: 2.00, output: 6.00 }
       },
       "gpt-3": {
@@ -168,6 +182,9 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: gpt3Map,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 2049,
+        exact: true,
+        tiktokenData: "p50k_base",
         costPer1M: { input: 0.03, output: 0.06 }
       },
       "llama-2": {
@@ -175,6 +192,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "SentencePiece (32k)",
         vocabSize: "32,000",
         vocabMap: llama2Map,
+        contextWindow: 4096,
         spaceChar: "▁",
         costPer1M: { input: 0.15, output: 0.60 }
       },
@@ -185,6 +203,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: claudeOpusMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 200000,
         costPer1M: { input: 15.00, output: 75.00 }
       },
       "grok-2": {
@@ -194,6 +213,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: grokMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
+        contextWindow: 131072,
         costPer1M: { input: 2.00, output: 10.00 }
       },
       "cohere-command-r": {
@@ -201,6 +221,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Byte-Pair Encoding (256k)",
         vocabSize: "256,000",
         vocabMap: cohereMap,
+        contextWindow: 131072,
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 2.50, output: 10.00 }
@@ -212,6 +233,7 @@ window.TOKENIZER_VOCABS = (() => {
         vocabMap: bertMap,
         spaceChar: "",
         subwordPrefix: "##",
+        contextWindow: 512,
         costPer1M: { input: 0.05, output: 0.05 }
       }
     }

@@ -7,7 +7,7 @@
  * .tiktoken files and Llama 3's tokenizer.json).
  *
  * The algorithm is the standard byte-level BPE:
- *   1. Pre-tokenize with the GPT-2 regex
+ *   1. Pre-tokenize with each encoding's official pat_str regex
  *   2. UTF-8 encode each chunk and map bytes to the GPT-2 byte-level alphabet
  *      (space -> "Ġ", newline -> "Ċ", tab -> "Ĩ", high bytes -> U+0100+)
  *   3. Greedily merge the lowest-rank adjacent pair until no pair is in ranks
@@ -67,9 +67,20 @@
     }
 
     _compilePatStr(patStr) {
-      // JS has no inline (?i: flag — convert to (?: (equivalent for the
-      // contraction groups used by tiktoken patterns)
-      const src = (patStr || "").replace(/\(\?i:/g, "(?:");
+      // JS has no inline (?i: flag — emulate Rust-regex case-insensitivity by
+      // expanding ASCII letters inside the group into explicit [xX] classes.
+      // tiktoken's GPT-2 patterns use (?i:'s|'t|'re|'ve|'m|'ll|'d), which must
+      // match "'M" inside "I'M" — a plain (?: conversion would not.
+      let src = (patStr || "").replace(/\(\?i:([^)]*)\)/g, (_, inner) => {
+        let out = "(?:";
+        for (const ch of inner) {
+          const up = ch.toUpperCase();
+          const lo = ch.toLowerCase();
+          if (up !== lo) out += "[" + up + lo + "]";
+          else out += ch;
+        }
+        return out + ")";
+      });
       try {
         return new RegExp(src, "gu");
       } catch (e) {

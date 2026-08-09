@@ -5,11 +5,14 @@
  *   - o200k_base.tiktoken / cl100k_base.tiktoken / p50k_base.tiktoken
  *     Format: "<base64(token bytes)> <rank>" per line, rank === token id
  *   - llama3_tokenizer.json (HuggingFace GPT2-type tokenizer)
+ *   - registry.json (official openai/tiktoken JS registry: authoritative
+ *     pat_str regexes + special token ids per encoding)
  *
  * Output: tokenizers/data/<name>.js containing
  *   window.TIKTOKEN_DATA["<name>"] = {
  *     ranks: "key rank\n...",   // merge priority (for tiktoken files: rank === id)
  *     vocab: "key id\n...",     // id lookup (same as ranks for tiktoken files)
+ *     patStr: "...",            // official pre-tokenizer regex (raw, backslashes intact)
  *     special: { "<|endoftext|>": 100257, ... }
  *   }
  * where "key" is the GPT-2 byte-level unicode string of the token bytes
@@ -73,8 +76,8 @@ function parseHfTokenizer(file) {
   const j = JSON.parse(fs.readFileSync(file, "utf8"));
   const model = j.model || {};
   const vocab = model.vocab || {};          // tokenString -> id
-  const merges = model.merges || [];         // ["Ġ t", ...]
-  // merges may be arrays of pairs ("[\u0120, t]") or space-joined strings ("\u0120 t")
+  const merges = model.merges || [];         // ["Ġ t", ...] or [["Ġ","t"], ...]
+  // only merges whose result exists in the vocab are usable
   const vocabSet = new Set(Object.keys(vocab));
   const rankMap = new Map(); // last occurrence wins (matches HF dict semantics)
   for (let i = 0; i < merges.length; i++) {
@@ -82,7 +85,6 @@ function parseHfTokenizer(file) {
     let mergedKey;
     if (Array.isArray(m)) mergedKey = m.join("");
     else { const sp = m.indexOf(" "); mergedKey = sp === -1 ? m : m.slice(0, sp) + m.slice(sp + 1); }
-    // only merges whose result exists in the vocab are usable
     if (vocabSet.has(mergedKey)) rankMap.set(mergedKey, i);
   }
   const rankEntries = [...rankMap].map(([key, rank]) => ({ key, rank }));
@@ -92,7 +94,14 @@ function parseHfTokenizer(file) {
   for (const t of j.added_tokens || []) {
     if (t.special) special[t.content] = t.id;
   }
-  return { rankEntries, vocabEntries, special };
+  // the GPT-2 style pre-tokenizer split regex lives in pre_tokenizer
+  const splitRegex = (function find(o) {
+    if (!o || typeof o !== "object") return null;
+    if (o.type === "Split" && o.pattern && o.pattern.Regex) return o.pattern.Regex;
+    for (const k of Object.keys(o)) { const r = find(o[k]); if (r) return r; }
+    return null;
+  })(j.pre_tokenizer);
+  return { rankEntries, vocabEntries, special, splitRegex };
 }
 
 // ---- emit --------------------------------------------------------------------
@@ -114,39 +123,29 @@ function emit(name, rankEntries, vocabEntries, special, patStr) {
 
 fs.mkdirSync(OUT, { recursive: true });
 
-// OpenAI tiktoken files: rank === id, so ranks and vocab are identical.
-// pat_str + special_tokens are the authoritative per-encoding values used by
-// the official tiktoken registry (openai/tiktoken registry.json).
-const GPT2_PAT = "(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+";
-const O200K_PAT = "[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]*[\p{Ll}\p{Lm}\p{Lo}\p{M}]+(?:'s|'t|'re|'ve|'m|'ll|'d)?|[^\r\n\p{L}\p{N}]?[\p{Lu}\p{Lt}\p{Lm}\p{Lo}\p{M}]+[\p{Ll}\p{Lm}\p{Lo}\p{M}]*(?:'s|'t|'re|'ve|'m|'ll|'d)?|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n/]*|\s*[\r\n]+|\s+(?!\S)|\s+";
-const P50K_PAT = "'s|'t|'re|'ve|'m|'ll|'d| ?\p{L}+| ?\p{N}+| ?[^\s\p{L}\p{N}]+|\s+(?!\S)|\s+";
+// ---- authoritative configs ----------------------------------------------------
+// pat_str + special_tokens come from the official openai/tiktoken registry —
+// exactly matching the npm tiktoken runtime we validate against (note: the
+// registry does NOT reserve <|im_start|>/<|im_end|> for cl100k/o200k, so the
+// real runtime encodes them as ordinary subword tokens).
+const REGISTRY = JSON.parse(fs.readFileSync(path.join(RAW, "registry.json"), "utf8"));
 
-const tiktokenConfigs = {
-  o200k_base: {
-    special: { "<|endoftext|>": 199999, "<|endofprompt|>": 200018, "<|im_start|>": 200000, "<|im_end|>": 200001 },
-    patStr: O200K_PAT
-  },
-  cl100k_base: {
-    special: { "<|endoftext|>": 100257, "<|fim_prefix|>": 100258, "<|fim_middle|>": 100259, "<|fim_suffix|>": 100260, "<|endofprompt|>": 100276, "<|im_start|>": 100264, "<|im_end|>": 100265 },
-    patStr: GPT2_PAT
-  },
-  p50k_base: {
-    special: { "<|endoftext|>": 50256 },
-    patStr: P50K_PAT
-  }
-};
+function specialsFor(name) {
+  return Object.assign({}, (REGISTRY[name] || {}).special_tokens || {});
+}
 
 for (const name of ["o200k_base", "cl100k_base", "p50k_base"]) {
   const entries = parseTiktoken(path.join(RAW, name + ".tiktoken"));
-  const { special, patStr } = tiktokenConfigs[name];
-  emit(name, entries, entries, special, patStr);
+  const patStr = (REGISTRY[name] || {}).pat_str || "";
+  emit(name, entries, entries, specialsFor(name), patStr);
 }
 
-// Llama 3: merge ranks come from the merges array, ids from the vocab.
-// Its pre_tokenizer regex is the GPT-2 pattern (from tokenizer.json).
+// Llama 3: merge ranks come from the merges array, ids from the vocab;
+// its pre-tokenizer regex is extracted from tokenizer.json itself.
 {
-  const { rankEntries, vocabEntries, special } = parseHfTokenizer(path.join(RAW, "llama3_tokenizer.json"));
-  emit("llama3", rankEntries, vocabEntries, special, GPT2_PAT);
+  const { rankEntries, vocabEntries, special, splitRegex } = parseHfTokenizer(path.join(RAW, "llama3_tokenizer.json"));
+  const patStr = splitRegex || (REGISTRY["cl100k_base"] || {}).pat_str || "";
+  emit("llama3", rankEntries, vocabEntries, special, patStr);
 }
 
 console.log("Done. Raw files can be deleted: tokenizers/data/raw/");
