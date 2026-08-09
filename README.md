@@ -23,6 +23,11 @@ Understanding **tokenization** is the #1 hidden skill in the AI world — it dec
 
 - ⚡ **Real-time tokenization** — every keystroke instantly re-tokenizes your prompt
 - 🧩 **Color-coded token pills** with **exact token IDs** (hover for UTF-8 bytes, hex, and character ranges)
+- 🎯 **EXACT tokenization** — GPT-4o, GPT-4, GPT-3 & Llama 3 ship the **real vocabularies** (byte-identical to official tiktoken — verified against it in CI)
+- ⚔️ **All-models battle table** — run the same prompt through all 14 models, ranked by token count, cost & context usage
+- 🧾 **Context-window meter** — see exactly what % of each model's context window your prompt consumes
+- 🌐 **Script detection** — instantly see which scripts (Devanagari, CJK, Arabic, Emoji…) are inflating your token count
+- ▦ **Token bar view** — flip pills into byte-length bars for a screenshot-worthy overview
 - 🔄 **Side-by-side model comparison** — see GPT-4o vs Llama 3 vs Gemini disagree on the same sentence
 - 📊 **Word ➜ Token breakdown matrix** — which words explode into multiple tokens?
 - 💰 **Live API cost estimator** — how much will this prompt cost on each model?
@@ -36,24 +41,27 @@ Understanding **tokenization** is the #1 hidden skill in the AI world — it dec
 
 ## 🧠 Supported Models
 
-| Model | Tokenizer Engine | Vocab Size |
-|---|---|---|
-| OpenAI **GPT-4o** / GPT-4o-mini | BPE (`o200k_base`) | 200,000 |
-| OpenAI **GPT-4** / GPT-3.5 Turbo | BPE (`cl100k_base`) | 100,000 |
-| OpenAI GPT-3 / GPT-2 / Codex | BPE (`p50k`/`r50k`) | 50,000 |
-| Meta **Llama 3.3 / 3.2 / 3.1** | Tiktoken BPE | 128,256 |
-| Meta Llama 2 / Llama 1 | SentencePiece | 32,000 |
-| Anthropic **Claude 3.5** Sonnet / Haiku | Claude BPE | 100,000+ |
-| Anthropic Claude 3 Opus | Claude BPE | 100,000+ |
-| Google **Gemini 2.0** Flash / 1.5 Pro | SentencePiece (Unigram) | 256,000 |
-| Google BERT | WordPiece | 30,522 |
-| DeepSeek **R1** / V3 | Byte-fallback BPE | 128,000 |
-| Alibaba **Qwen 2.5** / Qwen Coder | Byte-fallback BPE | 151,646 |
-| Mistral **Large** / Mixtral | Tekken BPE | 131,000 |
-| xAI **Grok 2** / Grok 1.5 | BPE | 131,000 |
-| Cohere Command R+ | BPE | 256,000 |
+| Model | Tokenizer Engine | Vocab Size | Context |
+|---|---|---|---|
+| OpenAI **GPT-4o** / GPT-4o-mini | ✅ Exact BPE (`o200k_base`) | 200,000 | 128k |
+| OpenAI **GPT-4** / GPT-3.5 Turbo | ✅ Exact BPE (`cl100k_base`) | 100,000 | 8k |
+| OpenAI GPT-3 / GPT-2 / Codex | ✅ Exact BPE (`p50k_base`) | 50,000 | 2k |
+| Meta **Llama 3.3 / 3.2 / 3.1** | ✅ Exact Tiktoken BPE | 128,256 | 128k |
+| Meta Llama 2 / Llama 1 | SentencePiece | 32,000 | 4k |
+| Anthropic **Claude 3.5** Sonnet / Haiku | Claude BPE* | 100,000+ | 200k |
+| Anthropic Claude 3 Opus | Claude BPE* | 100,000+ | 200k |
+| Google **Gemini 2.0** Flash / 1.5 Pro | SentencePiece (Unigram)* | 256,000 | 1M |
+| Google BERT | WordPiece | 30,522 | 512 |
+| DeepSeek **R1** / V3 | Byte-fallback BPE* | 128,000 | 128k |
+| Alibaba **Qwen 2.5** / Qwen Coder | Byte-fallback BPE* | 151,646 | 128k |
+| Mistral **Large** / Mixtral | Tekken BPE* | 131,000 | 128k |
+| xAI **Grok 2** / Grok 1.5 | BPE* | 131,000 | 128k |
+| Cohere Command R+ | BPE* | 256,000 | 128k |
 
-**14 models. 3 tokenizer engines (BPE, WordPiece, SentencePiece). 0 servers.**
+**14 models · 4 tokenizer engines (real tiktoken, BPE, WordPiece, SentencePiece) · 0 servers**
+
+> ✅ **Exact** = the real vocabulary file is embedded and token IDs are byte-identical to the official tokenizer.
+> \* = these vendors don't publish their tokenizer files, so their engine is a faithful approximation (clearly labeled in-app).
 
 ---
 
@@ -79,13 +87,14 @@ That's it — there are **no dependencies, no build step, no node_modules**.
 
 ## 🛠️ How It Works
 
-The project ships **three real tokenizer engines** implemented from scratch in vanilla JavaScript:
+The project ships **four real tokenizer engines** implemented from scratch in vanilla JavaScript:
 
-- **`tokenizers/bpe.js`** — Byte-Pair Encoding (OpenAI tiktoken-style, Llama 3, DeepSeek, Qwen, Grok, Cohere) with greedy longest-match subword splitting and byte-fallback for unknown characters
+- **`tokenizers/tiktoken.js`** — the *actual* byte-level BPE algorithm (merge-rank greedy merging, per-encoding `pat_str` regexes, case-insensitive contraction groups, official special tokens) — verified byte-identical to OpenAI's official `tiktoken` runtime for **o200k_base**, **cl100k_base** and **p50k_base**, and to **Llama 3**'s tokenizer
+- **`tokenizers/bpe.js`** — approximate Byte-Pair Encoding (Claude, DeepSeek, Qwen, Grok, Cohere) with greedy longest-match subword splitting and byte-fallback for unknown characters
 - **`tokenizers/sentencepiece.js`** — SentencePiece-style engine (Gemini's Unigram, Llama 2) with `▁` space markers
 - **`tokenizers/wordpiece.js`** — WordPiece engine (BERT) with `##` subword prefixes
 
-Every token exposes its **ID, UTF-8 bytes, hex representation, and character range** — so you can inspect exactly how any model encodes any string, including multi-byte Unicode and emoji.
+Every token exposes its **ID, UTF-8 bytes, hex representation, and character range** — so you can inspect exactly how any model encodes any string, including multi-byte Unicode and emoji. The exact vocabularies (real `o200k/cl100k/p50k` files + Llama 3's `tokenizer.json`, ~10 MB) are lazy-loaded on demand — the page stays instant, then streams the exact data only when you pick an exact model or open the battle tab.
 
 ```
 Text:  "Hello World!"
@@ -100,15 +109,22 @@ Tokens:[Hello(13225)] [ World(2024)] [!(0)]
 ## 📁 Project Structure
 
 ```
-├── index.html               # Single-page UI (playground, compare, BPE views)
+├── app.html                 # Main UI (playground, compare, BPE, all-models battle)
+├── index.html               # Landing page
 ├── app.js                   # Main controller: tokenization, sync, metrics, popovers
 ├── index.css                # Dark theme styling
 ├── tokenizers/
-│   ├── vocabularies.js      # Model configs + realistic vocabulary/ID database
-│   ├── bpe.js               # Byte-Pair Encoding engine
+│   ├── vocabularies.js      # 14 model configs (context windows, costs, exact flags)
+│   ├── tiktoken.js          # Exact byte-BPE engine (verified vs official tiktoken)
+│   ├── bpe.js               # Approximate Byte-Pair Encoding engine
 │   ├── wordpiece.js         # WordPiece engine (BERT)
-│   └── sentencepiece.js     # SentencePiece engine (Gemini, Llama 2)
-└── package.json             # Dev scripts (static server)
+│   ├── sentencepiece.js     # SentencePiece engine (Gemini, Llama 2)
+│   └── data/                # Real vocabularies (o200k, cl100k, p50k, llama3)
+├── tools/
+│   ├── convert_vocab.js     # Converts official tokenizer files -> data/*.js
+│   ├── compare_tiktoken.js  # Validates engine vs the official npm tiktoken package
+│   └── validate_tiktoken.js # Round-trip / offset integrity checks
+└── package.json             # npm test (zero-dependency node:test suite)
 ```
 
 ---
@@ -118,9 +134,15 @@ Tokens:[Hello(13225)] [ World(2024)] [!(0)]
 Have an idea to make this more viral? PRs are welcome!
 
 - 🌐 **More models** — add new vocabularies (e.g., Phi-3, Nemotron, Kimi)
-- 🎯 **Exact vocabularies** — swap in official `tiktoken` / HuggingFace vocab JSONs
+- 🎯 **More exact vocabularies** — Anthropic/xAI/Google don't publish theirs, but any tokenizer with a public file can be swapped in via `tools/convert_vocab.js`
 - 📈 **Token-efficient prompt tips** — in-app optimization suggestions
 - ✨ **Anything** that makes tokenization more fun to learn
+
+---
+
+## 🧪 Verified Accuracy
+
+`npm test` runs a zero-dependency suite that includes **ground-truth checks against the official tiktoken runtime**: `"Hello World!"` → `[9906, 4435, 0]` on cl100k, case-insensitive contractions (`"I'M"` → `[40, 28703]`), Devanagari/CJK/emoji round-trips, and a guard that every dropdown model has a real config. `tools/compare_tiktoken.js` can re-verify the whole engine against the official npm package any time.
 
 ---
 
