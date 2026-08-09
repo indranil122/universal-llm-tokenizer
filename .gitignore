@@ -16,3 +16,8 @@ Thumbs.db
 # Python
 __pycache__/
 *.pyc
+
+# Local credentials / MCP configs
+.gemini/
+*.env
+.env.*

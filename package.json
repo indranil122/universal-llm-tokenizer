@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "python -m http.server 8080",
     "start": "python -m http.server 8080",
-    "serve": "npx serve ."
+    "serve": "npx serve .",
+    "test": "node --test"
   },
   "keywords": [
     "tokenizer",

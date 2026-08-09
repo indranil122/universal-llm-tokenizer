@@ -36,13 +36,13 @@ window.TOKENIZER_VOCABS = (() => {
     " ization", " prompt", " learn", " ing", " transform", " er"
   ];
 
-  // Auto-generate space-prefixed variants for words
+  // Auto-generate prefix variants: plain word, space-prefixed (BPE),
+  // "Ġ"-prefixed (tiktoken display) and "▁"-prefixed (SentencePiece display)
   baseWords.forEach(w => {
     generalVocabList.push(w);
     generalVocabList.push(" " + w);
-    generalVocabList.push("G" + w);
-    generalVocabList.push(" " + w); // Wait, " " is the sentencepiece prefix, let's use standard space, G, and ?
-    generalVocabList.push("?" + w);
+    generalVocabList.push("Ġ" + w);
+    generalVocabList.push("▁" + w);
   });
 
   function buildVocabMap(offset, exactMap, baseList) {
@@ -78,6 +78,11 @@ window.TOKENIZER_VOCABS = (() => {
   const deepseekMap = buildVocabMap(500000, null, generalVocabList);
   const qwenMap = buildVocabMap(600000, null, generalVocabList);
   const mistralMap = buildVocabMap(700000, null, generalVocabList);
+  const gpt3Map = buildVocabMap(800000, gpt4ExactMap, generalVocabList);
+  const llama2Map = buildVocabMap(900000, null, generalVocabList);
+  const claudeOpusMap = buildVocabMap(1000000, gpt4ExactMap, generalVocabList);
+  const grokMap = buildVocabMap(1100000, null, generalVocabList);
+  const cohereMap = buildVocabMap(1200000, null, generalVocabList);
 
   // Fix regex: removed (?i:...) flag
   const bpeRegex = /(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+/gu;
@@ -89,7 +94,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Byte-Pair Encoding (o200k_base)",
         vocabSize: "200,000",
         vocabMap: gpt4oMap,
-        spaceChar: "G",
+        spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 2.50, output: 10.00 }
       },
@@ -98,7 +103,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Byte-Pair Encoding (cl100k_base)",
         vocabSize: "100,000",
         vocabMap: gpt4Map,
-        spaceChar: "G",
+        spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 5.00, output: 15.00 }
       },
@@ -107,7 +112,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Tiktoken BPE (128k)",
         vocabSize: "128,256",
         vocabMap: llama3Map,
-        spaceChar: "G",
+        spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 0.15, output: 0.60 }
       },
@@ -116,7 +121,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Byte-Pair Encoding (Claude BPE)",
         vocabSize: "100,000+",
         vocabMap: gpt4Map,
-        spaceChar: "G",
+        spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 3.00, output: 15.00 }
       },
@@ -125,7 +130,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "SentencePiece (Unigram 256k)",
         vocabSize: "256,000",
         vocabMap: geminiMap,
-        spaceChar: "?", // changed to ? since sentencepiece uses it
+        spaceChar: "▁", // SentencePiece space metastymbol (U+2581)
         costPer1M: { input: 0.10, output: 0.40 }
       },
       "deepseek-r1": {
@@ -133,7 +138,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Byte-Fallback BPE (128k)",
         vocabSize: "128,000",
         vocabMap: deepseekMap,
-        spaceChar: "G",
+        spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 0.14, output: 0.55 }
       },
@@ -142,7 +147,7 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Byte-Fallback BPE (151k)",
         vocabSize: "151,646",
         vocabMap: qwenMap,
-        spaceChar: "G",
+        spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 0.20, output: 0.60 }
       },
@@ -151,9 +156,53 @@ window.TOKENIZER_VOCABS = (() => {
         family: "Tekken BPE (32k / 131k)",
         vocabSize: "32,768",
         vocabMap: mistralMap,
-        spaceChar: "G",
+        spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 2.00, output: 6.00 }
+      },
+      "gpt-3": {
+        name: "OpenAI GPT-3 / GPT-2 / Codex",
+        family: "Byte-Pair Encoding (p50k / r50k)",
+        vocabSize: "50,000",
+        vocabMap: gpt3Map,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 0.03, output: 0.06 }
+      },
+      "llama-2": {
+        name: "Meta Llama 2 / Llama 1",
+        family: "SentencePiece (32k)",
+        vocabSize: "32,000",
+        vocabMap: llama2Map,
+        spaceChar: "▁",
+        costPer1M: { input: 0.15, output: 0.60 }
+      },
+      "claude-3-opus": {
+        name: "Anthropic Claude 3 Opus",
+        family: "Byte-Pair Encoding (Claude BPE)",
+        vocabSize: "100,000+",
+        vocabMap: claudeOpusMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 15.00, output: 75.00 }
+      },
+      "grok-2": {
+        name: "xAI Grok 2 / Grok 1.5",
+        family: "Byte-Pair Encoding (131k)",
+        vocabSize: "131,000",
+        vocabMap: grokMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 2.00, output: 10.00 }
+      },
+      "cohere-command-r": {
+        name: "Cohere Command R+",
+        family: "Byte-Pair Encoding (256k)",
+        vocabSize: "256,000",
+        vocabMap: cohereMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 2.50, output: 10.00 }
       },
       "bert": {
         name: "Google BERT (WordPiece)",

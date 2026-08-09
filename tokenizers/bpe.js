@@ -19,7 +19,7 @@ window.BPETokenizer = class BPETokenizer {
     if (!text) return [];
 
     const tokens = [];
-    const regex = this.modelConfig.regex || /(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+/gu;
+    const regex = this.modelConfig.regex || /(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+/gu;
     
     // Pre-tokenize text using Regex
     let match;

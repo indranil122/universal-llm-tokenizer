@@ -624,3 +624,64 @@ body {
   border-top: 1px solid var(--border-color);
   margin-top: auto;
 }
+
+/* ==========================================================================
+   Responsive / Mobile Enhancements
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .app-header {
+    padding: 0.75rem 1rem;
+  }
+
+  .header-container {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .nav-tabs {
+    width: 100%;
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    flex: 1;
+    justify-content: center;
+    padding: 0.5rem 0.6rem;
+    white-space: nowrap;
+  }
+
+  .main-wrapper {
+    padding: 1rem 1rem 2rem;
+  }
+
+  .control-bar {
+    padding: 0.85rem 1rem;
+  }
+
+  .card-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+
+  .mapping-table {
+    font-size: 0.8rem;
+  }
+
+  .mapping-table th,
+  .mapping-table td {
+    padding: 0.5rem;
+  }
+
+  .editor-sync-container,
+  .prompt-textarea {
+    min-height: 180px;
+    height: 180px;
+  }
+}

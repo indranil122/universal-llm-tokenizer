@@ -7,7 +7,7 @@ window.SentencePieceTokenizer = class SentencePieceTokenizer {
   constructor(modelConfig) {
     this.modelConfig = modelConfig;
     this.vocabMap = modelConfig.vocabMap;
-    this.spaceChar = modelConfig.spaceChar || " ";
+    this.spaceChar = modelConfig.spaceChar || "▁";
   }
 
   tokenize(text) {

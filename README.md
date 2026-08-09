@@ -4,7 +4,7 @@
 
 ### *See exactly how AI models "read" your text — in real time*
 
-**Type a prompt. Watch GPT-4o, Llama 3, Claude, Gemini, DeepSeek & 12+ models split it into subword tokens — live, color-coded, with exact token IDs.**
+**Type a prompt. Watch GPT-4o, Llama 3, Claude, Gemini, DeepSeek & 14 models split it into subword tokens — live, color-coded, with exact token IDs.**
 
 [![Live Demo](https://img.shields.io/badge/%F0%9F%96%A5%EF%B8%8F_Live_Demo-GitHub_Pages-2ea44f?style=for-the-badge)](https://indranil122.github.io/universal-llm-tokenizer/)
 [![Zero Dependencies](https://img.shields.io/badge/Zero%20Dependencies-Vanilla%20JS-f7df1e?style=for-the-badge)]()

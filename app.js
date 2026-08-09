@@ -36,11 +36,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabPlayground = document.getElementById("tabPlayground");
   const tabCompare = document.getElementById("tabCompare");
   const tabStepBPE = document.getElementById("tabStepBPE");
-  const tabDecoder = document.getElementById("tabDecoder");
 
   const playgroundView = document.getElementById("playgroundView");
   const bpeStepView = document.getElementById("bpeStepView");
-  const decoderView = document.getElementById("decoderView");
 
   // Current Tokens State
   let currentTokens = [];
