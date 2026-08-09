@@ -20,19 +20,17 @@ body {
   line-height: 1.4;
   text-transform: uppercase;
   min-height: 100vh;
-  padding: 2vw;
+  padding: 0;
+  margin: 0;
   display: flex;
 }
 
 .brutalist-wrapper {
-  border: 2px solid var(--grid-line);
   display: flex;
   flex-direction: column;
   flex: 1;
   background: var(--bg-color);
-  box-shadow: 10px 10px 0 var(--text-primary);
-  margin: 0 auto;
-  max-width: 1400px;
+  width: 100%;
 }
 
 /* Header */
@@ -161,8 +159,7 @@ body {
   .feature-card:nth-child(1), .feature-card:nth-child(2) { border-bottom: 2px solid var(--grid-line); }
 }
 @media (max-width: 768px) {
-  body { padding: 1rem; }
-  .brutalist-wrapper { box-shadow: 4px 4px 0 var(--text-primary); }
+  body { padding: 0; }
   .landing-header { grid-template-columns: 1fr; }
   .logo { border-right: none; border-bottom: 2px solid var(--grid-line); }
   .cta-container { grid-template-columns: 1fr; }

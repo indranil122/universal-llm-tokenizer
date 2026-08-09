@@ -341,7 +341,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const tdCount = document.createElement("td");
       tdCount.style.fontFamily = "var(--font-code)";
       tdCount.style.fontWeight = "bold";
-      tdCount.style.color = matchingTokens.length > 1 ? "#FFFFFF" : "#A3A3A3";
+      tdCount.style.color = matchingTokens.length > 1 ? "var(--border-active)" : "var(--text-secondary)";
       tdCount.textContent = `${matchingTokens.length} token${matchingTokens.length > 1 ? 's' : ''}`;
 
       tr.appendChild(tdWord);
@@ -674,7 +674,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (githubModalBody) {
           githubModalBody.innerHTML = `
             <div style="margin-bottom: 1rem;">
-              <strong style="color: #FFF; font-size: 1.1rem;">Latest Commit on ${date.toLocaleDateString()}</strong>
+              <strong style="color: var(--text-primary); font-size: 1.1rem;">Latest Commit on ${date.toLocaleDateString()}</strong>
               <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
                 by <span style="color: var(--accent-cyan);">${escapeHtml(data[0].commit.author.name)}</span>
               </div>

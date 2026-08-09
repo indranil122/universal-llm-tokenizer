@@ -361,6 +361,15 @@ body {
   box-shadow: inset 2px 2px 0 rgba(0,0,0,0.1);
 }
 
+.loading-hint {
+  font-family: var(--font-code);
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  background: var(--bg-card-hover);
+  border: 2px dashed var(--border-color);
+  padding: 1rem;
+}
+
 .token-pill {
   font-family: var(--font-code);
   font-size: 0.9rem;
@@ -401,6 +410,33 @@ body {
   background: var(--border-active) !important;
   color: #FFFFFF !important;
   border-color: var(--border-color) !important;
+}
+
+/* Token Bar View */
+.token-bars {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  align-content: flex-end;
+  gap: 3px;
+  min-height: 240px;
+}
+.token-bar {
+  height: 32px;
+  border: 2px solid var(--border-color);
+  cursor: pointer;
+}
+.token-bar[data-color="0"] { background: var(--token-color-0); }
+.token-bar[data-color="1"] { background: var(--token-color-1); }
+.token-bar[data-color="2"] { background: var(--token-color-2); }
+.token-bar[data-color="3"] { background: var(--token-color-3); }
+.token-bar[data-color="4"] { background: var(--token-color-4); }
+.token-bar[data-color="5"] { background: var(--token-color-5); }
+.token-bar:hover, .token-bar.hovered {
+  background: var(--border-active) !important;
+  transform: translate(-2px, -2px);
+  box-shadow: 2px 2px 0 var(--border-color);
+  z-index: 10;
 }
 
 /* View Toggle Bar */
@@ -490,6 +526,7 @@ body {
   padding: 0.4rem 0.85rem;
   box-shadow: 2px 2px 0 var(--border-color);
 }
+.script-chip.muted { color: var(--text-muted); }
 
 /* Mapping Table */
 .mapping-section {
@@ -617,6 +654,54 @@ body {
   background: var(--bg-dark);
   font-weight: 700;
   margin-top: auto;
+}
+
+/* Battle Table */
+.battle-note {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 4px 4px 0 var(--border-color);
+}
+.battle-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-card);
+  border: 2px solid var(--border-color);
+  box-shadow: 6px 6px 0 var(--border-color);
+}
+.battle-table th, .battle-table td {
+  padding: 0.9rem 1rem;
+  text-align: left;
+  border-bottom: 2px solid var(--border-color);
+  border-right: 2px solid var(--border-color);
+}
+.battle-table th:last-child, .battle-table td:last-child { border-right: none; }
+.battle-table th {
+  background: var(--border-color);
+  color: var(--bg-dark);
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+}
+.battle-table tbody tr { cursor: pointer; }
+.battle-table tbody tr:hover { background: var(--bg-card-hover); }
+.battle-mono { font-family: var(--font-code); }
+.battle-strong { font-weight: 700; font-size: 1.05rem; }
+.battle-row-active, .battle-row-active td {
+  background: var(--border-active);
+  color: #FFFFFF;
+}
+.exact-tag {
+  font-size: 0.65rem;
+  background: var(--border-color);
+  color: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  padding: 2px 6px;
+  margin-left: 6px;
+  vertical-align: middle;
 }
 
 /* Modals */
