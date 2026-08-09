@@ -1,0 +1,626 @@
+/* ==========================================================================
+   Universal LLM Tokenizer & Visualizer - Styling System
+   Modern Sleek Dark Glassmorphism Design System
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap');
+
+:root {
+  /* Color Tokens - Ultra Sleek Monochrome (Black & White) */
+  --bg-dark: #050505;
+  --bg-card: rgba(18, 18, 18, 0.9);
+  --bg-card-hover: rgba(28, 28, 28, 0.95);
+  --border-color: rgba(255, 255, 255, 0.15);
+  --border-active: #FFFFFF;
+
+  --text-primary: #FFFFFF;
+  --text-secondary: #D4D4D4;
+  --text-muted: #888888;
+
+  --accent-cyan: #FFFFFF;
+  --accent-purple: #E5E5E5;
+  --accent-pink: #D4D4D4;
+  --accent-emerald: #A3A3A3;
+  --accent-amber: #F5F5F5;
+
+  /* Token Color Palette (Alternating Monochrome Grayscale) */
+  --token-color-0: rgba(255, 255, 255, 0.12);
+  --token-border-0: #666666;
+  --token-color-1: rgba(255, 255, 255, 0.06);
+  --token-border-1: #444444;
+  --token-color-2: rgba(255, 255, 255, 0.18);
+  --token-border-2: #888888;
+  --token-color-3: rgba(255, 255, 255, 0.1);
+  --token-border-3: #555555;
+  --token-color-4: rgba(255, 255, 255, 0.22);
+  --token-border-4: #AAAAAA;
+  --token-color-5: rgba(255, 255, 255, 0.14);
+  --token-border-5: #777777;
+
+  --font-main: 'Inter', system-ui, sans-serif;
+  --font-heading: 'Outfit', system-ui, sans-serif;
+  --font-code: 'Fira Code', monospace;
+
+  --shadow-glow: 0 0 20px rgba(255, 255, 255, 0.1);
+  --radius-lg: 14px;
+  --radius-md: 8px;
+  --radius-sm: 4px;
+
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background-color: var(--bg-dark);
+  background-image: 
+    radial-gradient(at 50% 0%, rgba(255, 255, 255, 0.05) 0px, transparent 60%);
+  background-attachment: fixed;
+  color: var(--text-primary);
+  font-family: var(--font-main);
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* App Header */
+.app-header {
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(12px);
+  background: rgba(11, 15, 25, 0.8);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 1rem 2rem;
+}
+
+.header-container {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.logo-group {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.logo-icon {
+  width: 42px;
+  height: 42px;
+  background: #FFFFFF;
+  color: #000000;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+}
+
+.logo-text h1 {
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #FFFFFF;
+}
+
+.logo-text p {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.nav-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  gap: 4px;
+}
+
+.tab-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0.55rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tab-btn:hover {
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.tab-btn.active {
+  background: #FFFFFF;
+  color: #000000;
+  border: 1px solid #FFFFFF;
+}
+
+/* Main Container */
+.main-wrapper {
+  max-width: 1440px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+  flex: 1;
+}
+
+/* Control Bar */
+.control-bar {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.model-select-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.control-label {
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  font-weight: 700;
+}
+
+.select-dropdown {
+  background: rgba(15, 23, 42, 0.9);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  padding: 0.6rem 1rem;
+  border-radius: var(--radius-md);
+  font-family: var(--font-main);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  outline: none;
+  transition: var(--transition-fast);
+}
+
+.select-dropdown:hover, .select-dropdown:focus {
+  border-color: var(--accent-cyan);
+  box-shadow: 0 0 10px rgba(56, 189, 248, 0.2);
+}
+
+.preset-buttons {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.preset-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.preset-btn:hover {
+  background: rgba(56, 189, 248, 0.15);
+  border-color: var(--accent-cyan);
+  color: #FFFFFF;
+}
+
+/* Primary Grid Layout */
+.tokenizer-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+  .tokenizer-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Card Styling */
+.card-panel {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  backdrop-filter: blur(16px);
+  border-radius: var(--radius-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.card-header {
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.card-title {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.card-body {
+  padding: 1.25rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Live Textarea & Highlight Sync Container */
+.editor-sync-container {
+  position: relative;
+  min-height: 240px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: var(--transition-fast);
+}
+
+.editor-sync-container:focus-within {
+  border-color: var(--accent-cyan);
+  box-shadow: var(--shadow-glow);
+}
+
+/* Highlight Backdrop Overlay */
+.highlight-backdrop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 1rem;
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  color: transparent;
+  pointer-events: none;
+  overflow: auto;
+}
+
+.prompt-textarea {
+  position: relative;
+  width: 100%;
+  height: 240px;
+  padding: 1rem;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text-primary);
+  font-family: var(--font-code);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  resize: vertical;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Prompt Highlight Word Span */
+.prompt-hl-span {
+  border-radius: 3px;
+  transition: var(--transition-fast);
+  padding: 1px 0;
+}
+
+.prompt-hl-span.hovered {
+  outline: 2px solid #FFFFFF;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+  font-weight: bold;
+}
+
+/* Token Output Container */
+.tokens-display-box {
+  min-height: 240px;
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 6px;
+  overflow-y: auto;
+  max-height: 380px;
+}
+
+.token-pill {
+  font-family: var(--font-code);
+  font-size: 0.85rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: var(--transition-fast);
+  user-select: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  position: relative;
+}
+
+.token-pill:hover, .token-pill.hovered {
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  z-index: 10;
+  border-color: #FFFFFF !important;
+}
+
+.token-pill .token-id-badge {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+/* Specific Token Colors - High Contrast Monochrome */
+.token-pill[data-color="0"] { background: var(--token-color-0); border-color: var(--token-border-0); color: #FFFFFF; }
+.token-pill[data-color="1"] { background: var(--token-color-1); border-color: var(--token-border-1); color: #E5E5E5; }
+.token-pill[data-color="2"] { background: var(--token-color-2); border-color: var(--token-border-2); color: #FFFFFF; }
+.token-pill[data-color="3"] { background: var(--token-color-3); border-color: var(--token-border-3); color: #D4D4D4; }
+.token-pill[data-color="4"] { background: var(--token-color-4); border-color: var(--token-border-4); color: #FFFFFF; }
+.token-pill[data-color="5"] { background: var(--token-color-5); border-color: var(--token-border-5); color: #E5E5E5; }
+
+.token-pill:hover, .token-pill.hovered {
+  background: #FFFFFF !important;
+  color: #000000 !important;
+  border-color: #FFFFFF !important;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.5);
+  z-index: 10;
+}
+
+.token-pill:hover .token-id-badge, .token-pill.hovered .token-id-badge {
+  background: #000000;
+  color: #FFFFFF;
+}
+
+/* Special Token Pill */
+.token-pill.special-token {
+  background: #FFFFFF !important;
+  border-color: #FFFFFF !important;
+  color: #000000 !important;
+  font-weight: bold;
+}
+
+/* Metrics & Stats Bar */
+.metrics-bar {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.metric-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 0.75rem 1rem;
+  text-align: center;
+}
+
+.metric-label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+}
+
+.metric-value {
+  font-family: var(--font-heading);
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent-cyan);
+}
+
+/* Prompt Word to Token Breakdown Mapping Table */
+.mapping-section {
+  margin-top: 1.5rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 1.25rem;
+}
+
+.section-title {
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.mapping-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.mapping-table th, .mapping-table td {
+  padding: 0.75rem 1rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.mapping-table th {
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-family: var(--font-heading);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.mapping-table td.word-cell {
+  font-family: var(--font-code);
+  font-weight: 600;
+  color: var(--accent-cyan);
+}
+
+.mapping-tokens-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+/* Interactive BPE Merger Controls */
+.bpe-step-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.bpe-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+}
+
+.btn-action {
+  background: #FFFFFF;
+  border: 1px solid #FFFFFF;
+  color: #000000;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.btn-action:hover {
+  background: #E5E5E5;
+  transform: translateY(-1px);
+}
+
+.bpe-step-card {
+  background: rgba(20, 20, 20, 0.8);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+}
+
+.bpe-step-header {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: #FFFFFF;
+  margin-bottom: 0.4rem;
+}
+
+.bpe-tokens-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 0.5rem;
+}
+
+/* Tooltip Popover */
+.token-popover {
+  position: fixed;
+  background: #000000;
+  border: 1px solid #FFFFFF;
+  border-radius: var(--radius-md);
+  padding: 0.85rem 1.1rem;
+  box-shadow: 0 10px 30px rgba(255, 255, 255, 0.15);
+  z-index: 1000;
+  pointer-events: none;
+  font-size: 0.82rem;
+  display: none;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 200px;
+}
+
+.popover-header {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  color: #FFFFFF;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  padding-bottom: 0.3rem;
+  margin-bottom: 0.2rem;
+}
+
+.popover-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.popover-key {
+  color: var(--text-muted);
+}
+
+.popover-val {
+  font-family: var(--font-code);
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+/* Hidden Utility */
+.hidden {
+  display: none !important;
+}
+
+/* Footer */
+.app-footer {
+  text-align: center;
+  padding: 1.5rem;
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  border-top: 1px solid var(--border-color);
+  margin-top: auto;
+}

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Universal LLM Tokenizer & Visualizer - Explore How AI Models See Text</title>
+  <meta name="description" content="Interactive visualizer showing how text, code, emojis, and non-English words are converted into subword tokens for GPT-4o, Llama 3, Claude, Gemini, and BERT.">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+
+  <!-- Header Section -->
+  <header class="app-header">
+    <div class="header-container">
+      <div class="logo-group">
+        <div class="logo-icon">🤖</div>
+        <div class="logo-text">
+          <h1>Universal LLM Tokenizer</h1>
+          <p>Real-Time Prompt Tokenization & Subword Visualizer</p>
+        </div>
+      </div>
+
+      <nav class="nav-tabs">
+        <button id="tabPlayground" class="tab-btn active">
+          <span>⚡</span> Live Playground
+        </button>
+        <button id="tabCompare" class="tab-btn">
+          <span>🔄</span> Compare Models
+        </button>
+        <button id="tabStepBPE" class="tab-btn">
+          <span>⏯️</span> BPE Step Engine
+        </button>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="main-wrapper">
+
+    <!-- Control & Preset Bar -->
+    <section class="control-bar">
+      <div class="model-select-group">
+        <span class="control-label">Target LLM Model:</span>
+        <select id="modelSelect" class="select-dropdown">
+          <optgroup label="OpenAI">
+            <option value="gpt-4o" selected>OpenAI GPT-4o / GPT-4o-mini (o200k_base - 200k)</option>
+            <option value="gpt-4">OpenAI GPT-4 / GPT-3.5 Turbo (cl100k_base - 100k)</option>
+            <option value="gpt-3">OpenAI GPT-3 / GPT-2 / Codex (p50k / r50k - 50k)</option>
+          </optgroup>
+          <optgroup label="Meta AI">
+            <option value="llama-3">Meta Llama 3.3 / 3.2 / 3.1 (128k Tiktoken BPE)</option>
+            <option value="llama-2">Meta Llama 2 / Llama 1 (32k SentencePiece)</option>
+          </optgroup>
+          <optgroup label="Anthropic">
+            <option value="claude-3-5">Anthropic Claude 3.5 Sonnet / Haiku (100k+ BPE)</option>
+            <option value="claude-3-opus">Anthropic Claude 3 Opus (100k+ BPE)</option>
+          </optgroup>
+          <optgroup label="Google DeepMind">
+            <option value="gemini-2-flash">Google Gemini 2.0 Flash / 1.5 Pro (256k Unigram)</option>
+            <option value="bert">Google BERT (WordPiece 30k)</option>
+          </optgroup>
+          <optgroup label="DeepSeek AI">
+            <option value="deepseek-r1">DeepSeek R1 / DeepSeek V3 (128k Byte-fallback)</option>
+          </optgroup>
+          <optgroup label="Alibaba Cloud">
+            <option value="qwen-2-5">Alibaba Qwen 2.5 / Qwen Coder (151k BPE)</option>
+          </optgroup>
+          <optgroup label="Mistral AI">
+            <option value="mistral-large">Mistral Large / Mixtral (Tekken BPE)</option>
+          </optgroup>
+          <optgroup label="xAI">
+            <option value="grok-2">xAI Grok 2 / Grok 1.5 (131k BPE)</option>
+          </optgroup>
+          <optgroup label="Cohere">
+            <option value="cohere-command-r">Cohere Command R+ (256k BPE)</option>
+          </optgroup>
+        </select>
+      </div>
+
+      <div class="preset-buttons">
+        <span class="control-label">Presets:</span>
+        <button class="preset-btn" data-preset="code">💻 Code</button>
+        <button class="preset-btn" data-preset="multilingual">🌍 Multilingual</button>
+        <button class="preset-btn" data-preset="emoji">😃 Emojis</button>
+        <button class="preset-btn" data-preset="numbers">🔢 Numbers</button>
+        <button class="preset-btn" data-preset="glitch">⚠️ System Tags</button>
+      </div>
+    </section>
+
+    <!-- Playground View -->
+    <div id="playgroundView">
+      <section class="tokenizer-grid">
+        
+        <!-- Left: Prompt Text Editor with Synchronized Highlight Backdrop -->
+        <article class="card-panel">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span>✍️</span> Prompt Text Input
+            </h2>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Type or edit prompt below</span>
+          </div>
+          <div class="card-body">
+            <div class="editor-sync-container">
+              <!-- Backdrop layer for highlighting prompt words -->
+              <div id="highlightBackdrop" class="highlight-backdrop"></div>
+              <!-- User Textarea Input -->
+              <textarea id="promptInput" class="prompt-textarea" placeholder="Type prompt words here to watch them tokenize live..." spellcheck="false">Hello World! How does AI convert human text into tokens? Let's check: tokenization, def main(): and 🤖 emojis!</textarea>
+            </div>
+          </div>
+        </article>
+
+        <!-- Right: Real-time Color-Coded Tokens Visualizer -->
+        <article class="card-panel">
+          <div class="card-header">
+            <h2 class="card-title">
+              <span>🧩</span> Output Tokens Visualizer
+            </h2>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Hover tokens to highlight prompt words</span>
+          </div>
+          <div class="card-body">
+            <div id="tokensDisplayBox" class="tokens-display-box"></div>
+          </div>
+        </article>
+
+      </section>
+
+      <!-- Side-by-Side Dual Model Comparison (Hidden by default) -->
+      <section id="compareContainer" class="card-panel hidden" style="margin-top: 1.5rem;">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span>🔄</span> Model B Comparison View
+          </h2>
+          <div class="model-select-group">
+            <span class="control-label">Compare With:</span>
+            <select id="compareModelSelect" class="select-dropdown">
+              <optgroup label="Meta AI">
+                <option value="llama-3" selected>Meta Llama 3.3 / 3.2 (128k BPE)</option>
+                <option value="llama-2">Meta Llama 2 (32k SentencePiece)</option>
+              </optgroup>
+              <optgroup label="OpenAI">
+                <option value="gpt-4o">OpenAI GPT-4o (o200k_base)</option>
+                <option value="gpt-4">OpenAI GPT-4 / 3.5 (cl100k_base)</option>
+              </optgroup>
+              <optgroup label="Anthropic">
+                <option value="claude-3-5">Anthropic Claude 3.5 Sonnet</option>
+              </optgroup>
+              <optgroup label="Google">
+                <option value="gemini-2-flash">Google Gemini 2.0 Flash</option>
+                <option value="bert">Google BERT (WordPiece)</option>
+              </optgroup>
+              <optgroup label="DeepSeek AI">
+                <option value="deepseek-r1">DeepSeek R1 / V3 (128k BPE)</option>
+              </optgroup>
+              <optgroup label="Alibaba">
+                <option value="qwen-2-5">Alibaba Qwen 2.5</option>
+              </optgroup>
+            </select>
+          </div>
+        </div>
+        <div class="card-body">
+          <div id="compareTokensDisplayBox" class="tokens-display-box"></div>
+        </div>
+      </section>
+
+      <!-- Metrics & Stats Dashboard -->
+      <section class="metrics-bar">
+        <div class="metric-card">
+          <div class="metric-label">Total Tokens</div>
+          <div id="tokenCount" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Prompt Words</div>
+          <div id="wordCount" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Characters</div>
+          <div id="charCount" class="metric-value">0</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Token Efficiency</div>
+          <div id="ratioCount" class="metric-value">0.00</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Est. Cost (1M Tokens)</div>
+          <div id="costEstimate" class="metric-value">$0.00</div>
+        </div>
+      </section>
+
+      <!-- Prompt Word to Token Mapping Matrix Table -->
+      <section class="mapping-section">
+        <h3 class="section-title">
+          <span>📊</span> Prompt Word ➔ Token Breakdown Matrix
+        </h3>
+        <table class="mapping-table">
+          <thead>
+            <tr>
+              <th>Prompt Word</th>
+              <th>Generated Tokens (Subwords & IDs)</th>
+              <th>Token Count</th>
+            </tr>
+          </thead>
+          <tbody id="mappingTableBody">
+            <!-- Dynamically populated -->
+          </tbody>
+        </table>
+      </section>
+
+    </div>
+
+    <!-- Step-by-Step BPE Merge View (Hidden by default) -->
+    <div id="bpeStepView" class="hidden">
+      <article class="card-panel">
+        <div class="card-header">
+          <h2 class="card-title">
+            <span>⏯️</span> Step-by-Step Byte-Pair Encoding (BPE) Merger
+          </h2>
+          <span style="font-size: 0.8rem; color: var(--text-secondary);">Watch raw characters merge into subwords step by step</span>
+        </div>
+        <div class="card-body">
+          <div id="bpeStepsContainer" class="bpe-step-container">
+            <!-- Dynamically populated merge steps -->
+          </div>
+        </div>
+      </article>
+    </div>
+
+  </main>
+
+  <!-- Floating Hover Tooltip Popover -->
+  <div id="tokenPopover" class="token-popover">
+    <div class="popover-header" id="popoverSubword">Token</div>
+    <div class="popover-row"><span class="popover-key">Token ID:</span><span id="popoverId" class="popover-val">0</span></div>
+    <div class="popover-row"><span class="popover-key">Hex Bytes:</span><span id="popoverHex" class="popover-val">0x00</span></div>
+    <div class="popover-row"><span class="popover-key">UTF-8 Dec:</span><span id="popoverBytes" class="popover-val">[0]</span></div>
+    <div class="popover-row"><span class="popover-key">Char Range:</span><span id="popoverRange" class="popover-val">0 – 0</span></div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer">
+    <p>Universal LLM Tokenizer & Visualizer • Powered by Byte-Pair Encoding, WordPiece & SentencePiece Engines</p>
+  </footer>
+
+  <!-- Tokenizer Scripts -->
+  <script src="tokenizers/vocabularies.js"></script>
+  <script src="tokenizers/bpe.js"></script>
+  <script src="tokenizers/wordpiece.js"></script>
+  <script src="tokenizers/sentencepiece.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

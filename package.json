@@ -1,0 +1,26 @@
+{
+  "name": "universal-llm-tokenizer",
+  "version": "1.0.0",
+  "description": "Universal LLM Tokenizer & Visualizer for all AI models",
+  "main": "index.html",
+  "scripts": {
+    "dev": "python -m http.server 8080",
+    "start": "python -m http.server 8080",
+    "serve": "npx serve ."
+  },
+  "keywords": [
+    "tokenizer",
+    "llm",
+    "gpt-4o",
+    "llama3",
+    "claude",
+    "gemini",
+    "deepseek",
+    "qwen",
+    "bpe",
+    "wordpiece",
+    "sentencepiece"
+  ],
+  "author": "",
+  "license": "MIT"
+}
