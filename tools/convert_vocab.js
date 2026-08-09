@@ -106,7 +106,7 @@ function emit(name, rankEntries, vocabEntries, special) {
   // For tiktoken files rank === id, so vocab is redundant with ranks — emit once
   const same = rankEntries.length === vocabEntries.length &&
     rankEntries.every((e, i) => vocabEntries[i] && e.key === vocabEntries[i].key && e.id === vocabEntries[i].id);
-  const js = `// Auto-generated from real tokenizer data by tools/convert_vocab.js — do not edit.\nwindow.TIKTOKEN_DATA = window.TIKTOKEN_DATA || {};\nwindow.TIKTOKEN_DATA[${JSON.stringify(name)}] = {\n  ranks: ${JSON.stringify(linesToText(rankEntries, true))}${same ? "" : `,\n  vocab: ${JSON.stringify(linesToText(vocabEntries, false))}`}\n  special: ${JSON.stringify(special)}\n};\n`;
+  const js = `// Auto-generated from real tokenizer data by tools/convert_vocab.js — do not edit.\nwindow.TIKTOKEN_DATA = window.TIKTOKEN_DATA || {};\nwindow.TIKTOKEN_DATA[${JSON.stringify(name)}] = {\n  ranks: ${JSON.stringify(linesToText(rankEntries, true))}${same ? "" : `,\n  vocab: ${JSON.stringify(linesToText(vocabEntries, false))}`},\n  special: ${JSON.stringify(special)}\n};\n`;
   fs.writeFileSync(path.join(OUT, name + ".js"), js);
   const kb = (fs.statSync(path.join(OUT, name + ".js")).size / 1024).toFixed(0);
   console.log(`${name}.js  ${kb} KB  (${vocabEntries.length} vocab, ${rankEntries.length} ranks, ${Object.keys(special).length} special)`);
