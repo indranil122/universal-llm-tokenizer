@@ -642,14 +642,26 @@ document.addEventListener("DOMContentLoaded", () => {
   updateTokenization();
 
   // Fetch real-time updates from GitHub API
-  async function fetchGitHubStatus() {
-    const statusElem = document.getElementById("githubUpdateStatus");
-    const btnCheck = document.getElementById("btnCheckUpdates");
-    if (!statusElem) return;
+  const githubModalOverlay = document.getElementById("githubModalOverlay");
+  const closeModalBtn = document.getElementById("closeModalBtn");
+  const githubModalBody = document.getElementById("githubModalBody");
+  const btnCheckUpdates = document.getElementById("btnCheckUpdates");
+  
+  if (closeModalBtn) {
+    closeModalBtn.addEventListener("click", () => {
+      githubModalOverlay.classList.add("hidden");
+    });
+  }
 
-    if (btnCheck) {
-      btnCheck.innerHTML = 'Fetching...';
-      btnCheck.disabled = true;
+  async function fetchGitHubStatus() {
+    if (btnCheckUpdates) {
+      btnCheckUpdates.innerHTML = 'Fetching...';
+      btnCheckUpdates.disabled = true;
+    }
+
+    if (githubModalOverlay && githubModalBody) {
+      githubModalOverlay.classList.remove("hidden");
+      githubModalBody.innerHTML = "Loading latest commit data...";
     }
 
     try {
@@ -657,28 +669,46 @@ document.addEventListener("DOMContentLoaded", () => {
       if (response.ok) {
         const data = await response.json();
         const date = new Date(data[0].commit.author.date);
-        statusElem.textContent = `Updated: ${date.toLocaleDateString()}`;
-        statusElem.title = `Latest commit: ${data[0].commit.message}`;
-        statusElem.style.display = "inline";
+        const escapedMsg = escapeHtml(data[0].commit.message).replace(/\n/g, '<br>');
         
-        if (btnCheck) {
-          btnCheck.style.display = "none";
+        if (githubModalBody) {
+          githubModalBody.innerHTML = `
+            <div style="margin-bottom: 1rem;">
+              <strong style="color: #FFF; font-size: 1.1rem;">Latest Commit on ${date.toLocaleDateString()}</strong>
+              <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                by <span style="color: var(--accent-cyan);">${escapeHtml(data[0].commit.author.name)}</span>
+              </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: var(--radius-sm); font-family: var(--font-code); font-size: 0.9rem; border: 1px solid var(--border-color); max-height: 200px; overflow-y: auto;">
+              ${escapedMsg}
+            </div>
+            <div style="margin-top: 1.25rem; text-align: right;">
+              <a href="${data[0].html_url}" target="_blank" class="github-btn" style="background: var(--accent-cyan); color: #000; border: none; padding: 0.5rem 1rem;">View on GitHub &rarr;</a>
+            </div>
+          `;
         }
       } else {
-        if (btnCheck) {
-          btnCheck.innerHTML = 'Error, Check Again';
-          btnCheck.disabled = false;
+        if (githubModalBody) {
+          githubModalBody.innerHTML = '<span style="color: #ff5555;">Error: Failed to fetch the latest commit. Rate limit might be exceeded.</span>';
         }
       }
     } catch (err) {
-      if (btnCheck) {
-        btnCheck.innerHTML = 'Error, Check Again';
-        btnCheck.disabled = false;
+      if (githubModalBody) {
+        githubModalBody.innerHTML = '<span style="color: #ff5555;">Error: Failed to fetch the latest commit. Check your connection.</span>';
+      }
+    } finally {
+      if (btnCheckUpdates) {
+        btnCheckUpdates.innerHTML = `
+          <svg height="16" viewBox="0 0 16 16" width="16" fill="currentColor">
+            <path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"></path>
+          </svg>
+          Check Live Updates
+        `;
+        btnCheckUpdates.disabled = false;
       }
     }
   }
   
-  const btnCheckUpdates = document.getElementById("btnCheckUpdates");
   if (btnCheckUpdates) {
     btnCheckUpdates.addEventListener("click", fetchGitHubStatus);
   }
