@@ -23,7 +23,7 @@ Understanding **tokenization** is the #1 hidden skill in the AI world — it dec
 
 - ⚡ **Real-time tokenization** — every keystroke instantly re-tokenizes your prompt
 - 🧩 **Color-coded token pills** with **exact token IDs** (hover for UTF-8 bytes, hex, and character ranges)
-- 🎯 **EXACT tokenization** — GPT-5, GPT-4o, GPT-4, GPT-3 & Llama 4 ship the **real vocabularies** (byte-identical to official tiktoken — verified in CI)
+- 🎯 **EXACT tokenization** — GPT-5, GPT-4o, GPT-4, GPT-3 & Llama 4 ship the **real vocabularies** (byte-identical to official tiktoken — verified by the test suite & validation tools)
 - ⚔️ **All-models battle table** — run the same prompt through all 15 models, ranked by token count, cost & context usage
 - 🧾 **Context-window meter** — see exactly what % of each model's context window your prompt consumes
 - 🌐 **Script detection** — instantly see which scripts (Devanagari, CJK, Arabic, Emoji…) are inflating your token count
@@ -48,7 +48,7 @@ The lineup tracks the **models that are actually live right now** (July/Aug 2026
 | OpenAI **GPT-5** / GPT-5.x family | ✅ Exact BPE (`o200k_base`) | 200,000 | 400k | 🟢 Current |
 | OpenAI GPT-4o / GPT-4o-mini | ✅ Exact BPE (`o200k_base`) | 200,000 | 128k | 🟡 Legacy API |
 | OpenAI GPT-4 / GPT-3.5 Turbo | ✅ Exact BPE (`cl100k_base`) | 100,000 | 8k | 🟡 Legacy |
-| OpenAI GPT-3 / GPT-2 / Codex | ✅ Exact BPE (`p50k_base`) | 50,000 | 2k | ⚪ Retired |
+| OpenAI GPT-3 / GPT-2 / Codex | ✅ Exact BPE (`p50k_base`) | 50,000 | 2,049 | ⚪ Retired |
 | Meta **Llama 4** Scout / Maverick | ✅ Exact Tiktoken BPE (Llama 3 128k vocab) | 128,256 | 1M (Scout: 10M) | 🟢 Current |
 | Meta Llama 2 / Llama 1 | SentencePiece | 32,000 | 4k | ⚪ Retired |
 | Anthropic **Claude Opus 5** | Claude BPE* | 100,000+ | 1M | 🟢 Current |
@@ -115,8 +115,13 @@ Tokens:[Hello(13225)] [ World(2024)] [!(0)]
 ```
 ├── app.html                 # Main UI (playground, compare, BPE, all-models battle)
 ├── index.html               # Landing page
+├── landing.css              # Landing page styling
 ├── app.js                   # Main controller: tokenization, sync, metrics, popovers
-├── index.css                # Dark theme styling
+├── index.css                # App styling (light brutalist theme)
+├── favicon.svg              # Site icon
+├── social-preview.png       # Social share image
+├── test/
+│   └── tokenizer.test.js    # Zero-dependency node:test suite (npm test)
 ├── tokenizers/
 │   ├── vocabularies.js      # 15 model configs (context windows, costs, exact flags)
 │   ├── tiktoken.js          # Exact byte-BPE engine (verified vs official tiktoken)
@@ -124,6 +129,7 @@ Tokens:[Hello(13225)] [ World(2024)] [!(0)]
 │   ├── wordpiece.js         # WordPiece engine (BERT)
 │   ├── sentencepiece.js     # SentencePiece engine (Gemini, Llama 2)
 │   └── data/                # Real vocabularies (o200k, cl100k, p50k, llama3)
+│       └── raw/             # Original source files (.tiktoken, tokenizer.json)
 ├── tools/
 │   ├── convert_vocab.js     # Converts official tokenizer files -> data/*.js
 │   ├── compare_tiktoken.js  # Validates engine vs the official npm tiktoken package
@@ -135,7 +141,7 @@ Tokens:[Hello(13225)] [ World(2024)] [!(0)]
 
 ## 🧪 Verified Accuracy
 
-`npm test` runs a zero-dependency suite that includes **ground-truth checks against the official tiktoken runtime**: `"Hello World!"` → `[9906, 4435, 0]` on cl100k, case-insensitive contractions (`"I'M"` → `[40, 28703]`), Devanagari/CJK/emoji round-trips, and a guard that every dropdown model in `app.html` has a real config (so the UI can never silently drift from the model database). `tools/compare_tiktoken.js` can re-verify the whole engine against the official npm package any time.
+`npm test` runs a zero-dependency suite with **hardcoded ground-truth token IDs** (each originally verified against the official tiktoken runtime): `"Hello World!"` → `[9906, 4435, 0]` on cl100k, case-insensitive contractions (`"I'M"` → `[40, 28703]`), Devanagari/CJK/emoji round-trips, and a guard that every dropdown model in `app.html` has a real config (so the UI can never silently drift from the model database). `tools/compare_tiktoken.js` can re-verify the whole engine against the official npm package any time.
 
 ---
 

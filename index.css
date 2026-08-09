@@ -57,6 +57,25 @@
   --transition-normal: 0s;
 }
 
+[data-theme="dark"] {
+  --bg-dark: #050505;
+  --bg-card: #111111;
+  --bg-card-hover: #1A1A1A;
+  --border-color: #F4F4F0;
+  --border-active: #FF2A2A;
+
+  --text-primary: #F4F4F0;
+  --text-secondary: #CCCCCC;
+  --text-muted: #888888;
+  
+  --token-border-0: #F4F4F0;
+  --token-border-1: #F4F4F0;
+  --token-border-2: #F4F4F0;
+  --token-border-3: #F4F4F0;
+  --token-border-4: #F4F4F0;
+  --token-border-5: #F4F4F0;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
