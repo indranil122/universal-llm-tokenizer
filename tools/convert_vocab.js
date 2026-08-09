@@ -1,12 +1,15 @@
 /**
  * Converts real tokenizer vocabularies into compact browser data files.
  *
- * Inputs (see tokenizers/data/raw/):
+ * Inputs (see tokenizers/data/raw/, git-ignored — re-download to regenerate):
  *   - o200k_base.tiktoken / cl100k_base.tiktoken / p50k_base.tiktoken
  *     Format: "<base64(token bytes)> <rank>" per line, rank === token id
+ *     URLs:  https://openaipublic.blob.core.windows.net/encodings/<name>.tiktoken
  *   - llama3_tokenizer.json (HuggingFace GPT2-type tokenizer)
+ *     URL:   https://huggingface.co/unsloth/Llama-3.1-8B/resolve/main/tokenizer.json
  *   - registry.json (official openai/tiktoken JS registry: authoritative
  *     pat_str regexes + special token ids per encoding)
+ *     Source: the npm "tiktoken" package (encoders/registry.json)
  *
  * Output: tokenizers/data/<name>.js containing
  *   window.TIKTOKEN_DATA["<name>"] = {

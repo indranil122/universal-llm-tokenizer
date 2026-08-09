@@ -640,4 +640,24 @@ document.addEventListener("DOMContentLoaded", () => {
   activeTokenizer = null;
   compareTokenizer = null;
   updateTokenization();
+
+  // Fetch real-time updates from GitHub API
+  async function fetchGitHubStatus() {
+    const statusElem = document.getElementById("githubUpdateStatus");
+    if (!statusElem) return;
+    try {
+      const response = await fetch("https://api.github.com/repos/indranil122/universal-llm-tokenizer/commits?per_page=1");
+      if (response.ok) {
+        const data = await response.json();
+        const date = new Date(data[0].commit.author.date);
+        statusElem.textContent = `Updated: ${date.toLocaleDateString()}`;
+        statusElem.title = `Latest commit: ${data[0].commit.message}`;
+      } else {
+        statusElem.style.display = "none";
+      }
+    } catch (err) {
+      statusElem.style.display = "none";
+    }
+  }
+  fetchGitHubStatus();
 });

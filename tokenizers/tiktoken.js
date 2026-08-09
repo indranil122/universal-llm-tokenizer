@@ -265,18 +265,23 @@
         parts.splice(bestIdx + 1, 1);
       }
 
-      let byteCursor = 0;
-      for (const part of parts) {
-        const len = part.length;
-        const bStart = byteCursor;
-        const bEnd = byteCursor + len;
-        byteCursor = bEnd;
+      // Precompute byte boundaries so char offsets can be snapped to whole
+      // characters: byte-level BPE can split INSIDE a multi-byte char (e.g. an
+      // emoji merged as byte-fallback tokens), which would otherwise produce
+      // overlapping/non-tiling char ranges. cStart_i = charIdxAt[boundary] =
+      // cEnd_(i-1), so tokens tile the original text exactly, by construction.
+      const bounds = [0];
+      for (const part of parts) bounds.push(bounds[bounds.length - 1] + part.length);
 
-        let id = this._vocab.get(part);
-        if (id === undefined) id = this._ranks.get(part); // byte-level fallback
+      for (let i = 0; i < parts.length; i++) {
+        const bStart = bounds[i];
+        const bEnd = bounds[i + 1];
+
+        let id = this._vocab.get(parts[i]);
+        if (id === undefined) id = this._ranks.get(parts[i]); // byte-level fallback
 
         const cStart = charIdxAt[bStart];
-        const cEnd = bEnd > 0 ? charIdxAt[bEnd - 1] + 1 : cStart;
+        const cEnd = bEnd >= keys.length ? chunk.length : charIdxAt[bEnd];
         const rawText = chunk.slice(cStart, cEnd);
         const bytes = Array.from(new TextEncoder().encode(rawText));
 
@@ -284,7 +289,7 @@
           index: tokens.length,
           id,
           text: rawText,
-          displaySubword: part,
+          displaySubword: parts[i],
           bytes,
           hexBytes: bytes.map(b => "0x" + b.toString(16).padStart(2, "0").toUpperCase()),
           start: start + cStart,

@@ -21,3 +21,6 @@ __pycache__/
 .gemini/
 *.env
 .env.*
+
+# Raw tokenizer inputs (re-downloadable; see tools/convert_vocab.js header)
+tokenizers/data/raw/
