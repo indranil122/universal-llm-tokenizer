@@ -47,7 +47,7 @@ window.TOKENIZER_VOCABS = (() => {
     // WordPiece Subwords (with ##)
     "##ize", "##ization", "##ing", "##ed", "##er", "##est", "##ly", "##tion", "##ment",
 
-    // SentencePiece Subwords (with  )
+    // SentencePiece Subwords (with ▁ space markers)
     " ization", " prompt", " learn", " ing", " transform", " er"
   ];
 
@@ -93,9 +93,9 @@ window.TOKENIZER_VOCABS = (() => {
   const deepseekMap = buildVocabMap(500000, null, generalVocabList);
   const qwenMap = buildVocabMap(600000, null, generalVocabList);
   const mistralMap = buildVocabMap(700000, null, generalVocabList);
-  const gpt3Map = buildVocabMap(800000, gpt4ExactMap, generalVocabList);
+  const gpt3Map = buildVocabMap(800000, null, generalVocabList);
   const llama2Map = buildVocabMap(900000, null, generalVocabList);
-  const claudeOpusMap = buildVocabMap(1000000, gpt4ExactMap, generalVocabList);
+  const claudeOpusMap = buildVocabMap(1000000, null, generalVocabList);
   const grokMap = buildVocabMap(1100000, null, generalVocabList);
   const cohereMap = buildVocabMap(1200000, null, generalVocabList);
 
@@ -103,6 +103,7 @@ window.TOKENIZER_VOCABS = (() => {
   const bpeRegex = /(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\\r\\n\\p{L}\\p{N}]?\\p{L}+|\\p{N}{1,3}| ?[^\\s\\p{L}\\p{N}]+[\\r\\n]*|\\s*[\\r\\n]+|\\s+(?!\\S)|\\s+/gu;
 
   return {
+    bpeRegex,
     models: {
       "gpt-4o": {
         name: "OpenAI GPT-4o / GPT-4o-mini",

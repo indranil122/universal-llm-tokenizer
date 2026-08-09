@@ -28,18 +28,27 @@ function makeTokenizer(key) {
   return new window.BPETokenizer(config);
 }
 
-// Every model the UI dropdown offers must have a real config
-const UI_MODEL_KEYS = [
-  "gpt-4o", "gpt-4", "gpt-3", "llama-3", "llama-2",
-  "claude-3-5", "claude-3-opus", "gemini-2-flash", "bert",
-  "deepseek-r1", "qwen-2-5", "mistral-large", "grok-2", "cohere-command-r",
-];
+// Parse the model dropdown options straight from index.html so this test can
+// never silently drift from the actual UI
+const fs = require("node:fs");
+const path = require("node:path");
 
-test("all 14 UI models have real configs (no silent GPT-4o fallback)", () => {
+const html = fs.readFileSync(path.join(__dirname, "..", "index.html"), "utf8");
+const UI_MODEL_KEYS = [...new Set([...html.matchAll(/<option value="([^"]+)"/g)].map(m => m[1]))];
+
+test("every model in the UI dropdown has a real config (no silent fallback)", () => {
+  assert.ok(UI_MODEL_KEYS.length >= 14, `expected at least 14 dropdown options, got ${UI_MODEL_KEYS.length}`);
   for (const key of UI_MODEL_KEYS) {
     assert.ok(models[key], `missing config for model key "${key}"`);
   }
-  assert.strictEqual(Object.keys(models).length, 14);
+});
+
+test("all models expose required config fields", () => {
+  for (const [key, cfg] of Object.entries(models)) {
+    assert.ok(cfg.name, `${key}: missing name`);
+    assert.ok(cfg.vocabMap, `${key}: missing vocabMap`);
+    assert.ok(cfg.costPer1M?.input > 0, `${key}: missing costPer1M.input`);
+  }
 });
 
 test("GPT-4o tokenizes 'Hello World!' with known IDs", () => {
