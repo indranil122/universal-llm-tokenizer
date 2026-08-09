@@ -420,11 +420,13 @@ body {
   align-content: flex-end;
   gap: 3px;
   min-height: 240px;
+  width: 100%;
 }
 .token-bar {
   height: 32px;
   border: 2px solid var(--border-color);
   cursor: pointer;
+  flex-shrink: 0;
 }
 .token-bar[data-color="0"] { background: var(--token-color-0); }
 .token-bar[data-color="1"] { background: var(--token-color-1); }
@@ -688,6 +690,7 @@ body {
 }
 .battle-table tbody tr { cursor: pointer; }
 .battle-table tbody tr:hover { background: var(--bg-card-hover); }
+.battle-table tbody tr.battle-row-active:hover { background: var(--border-active); }
 .battle-mono { font-family: var(--font-code); }
 .battle-strong { font-weight: 700; font-size: 1.05rem; }
 .battle-row-active, .battle-row-active td {

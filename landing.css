@@ -7,6 +7,12 @@
   --grid-line: #050505;
 }
 
+[data-theme="dark"] {
+  --bg-color: #050505;
+  --text-primary: #F4F4F0;
+  --grid-line: #F4F4F0;
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -124,6 +130,9 @@ body {
 .feature-card:hover {
   background: rgba(0,0,0,0.05);
 }
+[data-theme="dark"] .feature-card:hover {
+  background: rgba(255,255,255,0.05);
+}
 .feature-card:last-child {
   border-right: none;
 }
@@ -136,6 +145,45 @@ body {
 .feature-card p {
   font-size: 0.95rem;
   line-height: 1.5;
+}
+
+/* How It Works Section */
+.how-it-works {
+  padding: 4rem 2rem;
+  border-bottom: 2px solid var(--grid-line);
+  border-top: 2px solid var(--grid-line);
+  background: var(--bg-color);
+}
+.how-title {
+  font-family: 'Archivo Black', sans-serif;
+  font-size: 2.5rem;
+  margin-bottom: 1.5rem;
+  color: var(--accent-red);
+}
+.how-text {
+  font-size: 1.15rem;
+  max-width: 900px;
+  line-height: 1.6;
+  font-weight: 400;
+  text-transform: none;
+}
+
+/* Theme Toggle */
+.theme-toggle-btn {
+  background: transparent;
+  border: 2px solid var(--grid-line);
+  color: var(--text-primary);
+  padding: 0.25rem 0.5rem;
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 0.75rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+.theme-toggle-btn:hover {
+  background: var(--grid-line);
+  color: var(--bg-color);
 }
 
 /* Footer */
