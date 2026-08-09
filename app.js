@@ -644,7 +644,14 @@ document.addEventListener("DOMContentLoaded", () => {
   // Fetch real-time updates from GitHub API
   async function fetchGitHubStatus() {
     const statusElem = document.getElementById("githubUpdateStatus");
+    const btnCheck = document.getElementById("btnCheckUpdates");
     if (!statusElem) return;
+
+    if (btnCheck) {
+      btnCheck.innerHTML = 'Fetching...';
+      btnCheck.disabled = true;
+    }
+
     try {
       const response = await fetch("https://api.github.com/repos/indranil122/universal-llm-tokenizer/commits?per_page=1");
       if (response.ok) {
@@ -652,12 +659,27 @@ document.addEventListener("DOMContentLoaded", () => {
         const date = new Date(data[0].commit.author.date);
         statusElem.textContent = `Updated: ${date.toLocaleDateString()}`;
         statusElem.title = `Latest commit: ${data[0].commit.message}`;
+        statusElem.style.display = "inline";
+        
+        if (btnCheck) {
+          btnCheck.style.display = "none";
+        }
       } else {
-        statusElem.style.display = "none";
+        if (btnCheck) {
+          btnCheck.innerHTML = 'Error, Check Again';
+          btnCheck.disabled = false;
+        }
       }
     } catch (err) {
-      statusElem.style.display = "none";
+      if (btnCheck) {
+        btnCheck.innerHTML = 'Error, Check Again';
+        btnCheck.disabled = false;
+      }
     }
   }
-  fetchGitHubStatus();
+  
+  const btnCheckUpdates = document.getElementById("btnCheckUpdates");
+  if (btnCheckUpdates) {
+    btnCheckUpdates.addEventListener("click", fetchGitHubStatus);
+  }
 });
