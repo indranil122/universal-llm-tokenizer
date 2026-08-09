@@ -596,6 +596,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // Dark/Light Theme Toggle
+  const themeToggleBtnApp = document.getElementById('themeToggleBtnApp');
+  if (themeToggleBtnApp) {
+    themeToggleBtnApp.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('tokenizer-theme', newTheme);
+    });
+  }
+
   // Navigation Tabs
   tabPlayground.addEventListener("click", () => switchTab("playground"));
   tabCompare.addEventListener("click", () => switchTab("compare"));

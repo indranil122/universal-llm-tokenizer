@@ -8,6 +8,10 @@
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
+  <script>
+    const savedTheme = localStorage.getItem('tokenizer-theme') || 'light';
+    document.documentElement.setAttribute('data-theme', savedTheme);
+  </script>
 </head>
 <body>
 
@@ -31,6 +35,9 @@
       </nav>
 
       <div class="header-github">
+        <button id="themeToggleBtnApp" class="preset-btn">
+          [ TOGGLE DARK/LIGHT ]
+        </button>
         <button id="btnCheckUpdates" class="preset-btn">
           [ CHECK LIVE UPDATES ]
         </button>
