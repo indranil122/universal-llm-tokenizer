@@ -31,10 +31,10 @@
 
 ## 🔥 Why tokenization matters
 
-Understanding **tokenization** is the #1 hidden skill in the AI world — it decides your **API costs**, your **context limits**, and even your **model's intelligence**:
+Understanding **tokenization** is the #1 hidden skill in the AI world - it decides your **API costs**, your **context limits**, and even your **model's intelligence**:
 
 - 💸 **It's your bill.** Every API call is priced per token. Non-English text can cost **2–10× more** for the same sentence.
-- 📏 **It's your limit.** A "1M context window" counts tokens, not words — and some scripts burn through it fast.
+- 📏 **It's your limit.** A "1M context window" counts tokens, not words - and some scripts burn through it fast.
 - 🧠 **It's your quality.** Why can't LLMs count the letters in *strawberry*? Why do they fumble at reversing strings? **Tokenization.** One token = one opaque ID; the model never sees individual letters.
 - 🌍 **It's why AI feels "English-first."** Devanagari, Tamil, CJK, Arabic and emoji all explode into many more tokens than English.
 
