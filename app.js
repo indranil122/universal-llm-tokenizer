@@ -9,7 +9,7 @@
 document.addEventListener("DOMContentLoaded", () => {
   // Model Instances
   const modelConfigs = window.TOKENIZER_VOCABS.models;
-  let activeModelKey = "gpt-5";
+  let activeModelKey = "gpt-5-6";
   let compareModelKey = "llama-4";
   let activeTokenizer = null;
   let compareTokenizer = null;
@@ -44,10 +44,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabCompare = document.getElementById("tabCompare");
   const tabStepBPE = document.getElementById("tabStepBPE");
   const tabBattle = document.getElementById("tabBattle");
+  const tabLearn = document.getElementById("tabLearn");
 
   const playgroundView = document.getElementById("playgroundView");
   const bpeStepView = document.getElementById("bpeStepView");
   const battleView = document.getElementById("battleView");
+  const learnView = document.getElementById("learnView");
   const battleTableWrap = document.getElementById("battleTableWrap");
   const viewToggle = document.getElementById("viewToggle");
 
@@ -612,10 +614,11 @@ document.addEventListener("DOMContentLoaded", () => {
   tabCompare.addEventListener("click", () => switchTab("compare"));
   tabStepBPE.addEventListener("click", () => switchTab("bpe"));
   tabBattle.addEventListener("click", () => switchTab("battle"));
+  tabLearn.addEventListener("click", () => switchTab("learn"));
 
   function switchTab(tabName) {
-    [tabPlayground, tabCompare, tabStepBPE, tabBattle].forEach(btn => btn.classList.remove("active"));
-    [playgroundView, bpeStepView, battleView].forEach(view => view.classList.add("hidden"));
+    [tabPlayground, tabCompare, tabStepBPE, tabBattle, tabLearn].forEach(btn => btn.classList.remove("active"));
+    [playgroundView, bpeStepView, battleView, learnView].forEach(view => view.classList.add("hidden"));
 
     if (tabName === "playground") {
       tabPlayground.classList.add("active");
@@ -633,9 +636,16 @@ document.addEventListener("DOMContentLoaded", () => {
       battleView.classList.remove("hidden");
       renderBattle();
       return;
+    } else if (tabName === "learn") {
+      tabLearn.classList.add("active");
+      learnView.classList.remove("hidden");
+      return;
     }
     updateTokenization();
   }
+
+  // Deep-link support: app.html#learn opens the Learn Academy directly
+  if (window.location.hash === "#learn") switchTab("learn");
 
   // Utility to escape HTML
   function escapeHtml(str) {

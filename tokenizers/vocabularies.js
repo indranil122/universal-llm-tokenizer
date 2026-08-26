@@ -83,6 +83,9 @@ window.TOKENIZER_VOCABS = (() => {
   const claudeOpusMap = buildVocabMap(1000000, null, generalVocabList);
   const grokMap = buildVocabMap(1100000, null, generalVocabList);
   const cohereMap = buildVocabMap(1200000, null, generalVocabList);
+  const kimiMap = buildVocabMap(1300000, null, generalVocabList);
+  const glmMap = buildVocabMap(1400000, null, generalVocabList);
+  const minimaxMap = buildVocabMap(1500000, null, generalVocabList);
 
   // Fix regex: removed (?i:...) flag
   const bpeRegex = /(?:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}{1,3}| ?[^\s\p{L}\p{N}]+[\r\n]*|\s*[\r\n]+|\s+(?!\S)|\s+/gu;
@@ -90,6 +93,18 @@ window.TOKENIZER_VOCABS = (() => {
   return {
     bpeRegex,
     models: {
+      "gpt-5-6": {
+        name: "OpenAI GPT-5.6 Sol / Terra / Luna",
+        family: "Byte-Pair Encoding (o200k_base)",
+        vocabSize: "200,000",
+        vocabMap: gpt4oMap,
+        contextWindow: 400000,
+        exact: true,
+        tiktokenData: "o200k_base",
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 5.00, output: 30.00 }
+      },
       "gpt-5": {
         name: "OpenAI GPT-5 / GPT-5.x family",
         family: "Byte-Pair Encoding (o200k_base)",
@@ -101,6 +116,28 @@ window.TOKENIZER_VOCABS = (() => {
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 1.25, output: 10.00 }
+      },
+      "gpt-4-1": {
+        name: "OpenAI GPT-4.1 / 4.1-mini (legacy API)",
+        family: "Byte-Pair Encoding (o200k_base)",
+        vocabSize: "200,000",
+        vocabMap: gpt4oMap,
+        contextWindow: 1000000,
+        exact: true,
+        tiktokenData: "o200k_base",
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 2.00, output: 8.00 }
+      },
+      "gpt-oss": {
+        name: "OpenAI gpt-oss-120b / 20b (open weights)",
+        family: "Byte-Pair Encoding (o200k_harmony, approximated with o200k_base)",
+        vocabSize: "201,088",
+        vocabMap: gpt4oMap,
+        contextWindow: 131072,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        costPer1M: { input: 0.10, output: 0.50 }
       },
       "gpt-4o": {
         name: "OpenAI GPT-4o / GPT-4o-mini (legacy API)",
@@ -128,25 +165,44 @@ window.TOKENIZER_VOCABS = (() => {
       },
       "llama-4": {
         name: "Meta Llama 4 Scout / Maverick",
-        family: "Tiktoken BPE (Llama 3 128k)",
-        vocabSize: "128,256",
+        family: "Tiktoken BPE — Llama 4 expands the vocab to 202,048 (approximated here with the embedded Llama 3 128k file)",
+        vocabSize: "202,048",
         vocabMap: llama3Map,
-        contextWindow: 1000000,
+        contextWindow: 10000000,
         exact: true,
         tiktokenData: "llama3",
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 0.15, output: 0.60 }
       },
+      "claude-fable-5": {
+        name: "Anthropic Claude Fable 5 / Mythos 5",
+        family: "Minimum-piece segmentation (proprietary — community-reverse-engineered ≈16k pieces)",
+        vocabSize: "≈16,200 (est.)",
+        vocabMap: claudeOpusMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        contextWindow: 1000000,
+        costPer1M: { input: 10.00, output: 50.00 }
+      },
       "claude-sonnet-5": {
         name: "Anthropic Claude Sonnet 5",
-        family: "Byte-Pair Encoding (Claude BPE)",
-        vocabSize: "100,000+",
+        family: "Minimum-piece segmentation (proprietary — community-reverse-engineered ≈16k pieces)",
+        vocabSize: "≈16,200 (est.)",
         vocabMap: gpt4Map,
         spaceChar: "Ġ",
         regex: bpeRegex,
-        contextWindow: 200000,
+        contextWindow: 1000000,
         costPer1M: { input: 3.00, output: 15.00 }
+      },
+      "gemini-3-1-pro": {
+        name: "Google Gemini 3.1 Pro / 3.5 Flash",
+        family: "SentencePiece (Unigram 256k)",
+        vocabSize: "256,000",
+        vocabMap: geminiMap,
+        spaceChar: "▁", // SentencePiece space metastymbol (U+2581)
+        contextWindow: 1000000,
+        costPer1M: { input: 2.00, output: 12.00 }
       },
       "gemini-3-pro": {
         name: "Google Gemini 3 Pro / 3 Flash",
@@ -158,24 +214,64 @@ window.TOKENIZER_VOCABS = (() => {
         costPer1M: { input: 2.00, output: 12.00 }
       },
       "deepseek-v4": {
-        name: "DeepSeek V4 / V3.2",
-        family: "Byte-Fallback BPE (128k)",
-        vocabSize: "128,000",
+        name: "DeepSeek V4 Pro / Flash (+ V3.2)",
+        family: "Byte-Fallback BPE",
+        vocabSize: "129,280",
         vocabMap: deepseekMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
         contextWindow: 1000000,
         costPer1M: { input: 0.28, output: 0.42 }
       },
+      "kimi-k3": {
+        name: "Moonshot Kimi K3 / K2.5",
+        family: "Tiktoken BPE",
+        vocabSize: "163,584",
+        vocabMap: kimiMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        contextWindow: 1048576,
+        costPer1M: { input: 0.60, output: 2.50 }
+      },
       "qwen-3-5": {
-        name: "Alibaba Qwen 3.5 / Qwen Coder",
-        family: "Byte-Fallback BPE (151k)",
+        name: "Alibaba Qwen 3.5 / 3.6 / 3.8",
+        family: "Byte-Fallback BPE (~248k, expanded from Qwen3's 151k)",
+        vocabSize: "248,320",
+        vocabMap: qwenMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        contextWindow: 262144,
+        costPer1M: { input: 0.20, output: 0.60 }
+      },
+      "qwen-3-coder": {
+        name: "Alibaba Qwen3 / Qwen3-Coder / Qwen3-Max (legacy)",
+        family: "Byte-Fallback BPE",
         vocabSize: "151,646",
         vocabMap: qwenMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
         contextWindow: 262144,
         costPer1M: { input: 0.20, output: 0.60 }
+      },
+      "glm-5": {
+        name: "Zhipu GLM-5 / GLM-5.2",
+        family: "Byte-Fallback BPE (glm5 encoding)",
+        vocabSize: "154,856",
+        vocabMap: glmMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        contextWindow: 1048576,
+        costPer1M: { input: 0.60, output: 2.20 }
+      },
+      "minimax-m2-5": {
+        name: "MiniMax M2.5 / M2.1 / M2",
+        family: "Byte-Fallback BPE (minimax_m2 encoding)",
+        vocabSize: "200,054",
+        vocabMap: minimaxMap,
+        spaceChar: "Ġ",
+        regex: bpeRegex,
+        contextWindow: 204800,
+        costPer1M: { input: 0.30, output: 1.20 }
       },
       "mistral-large-3": {
         name: "Mistral Large 3 / Mistral Small",
@@ -210,8 +306,8 @@ window.TOKENIZER_VOCABS = (() => {
       },
       "claude-opus-5": {
         name: "Anthropic Claude Opus 5",
-        family: "Byte-Pair Encoding (Claude BPE)",
-        vocabSize: "100,000+",
+        family: "Minimum-piece segmentation (proprietary — community-reverse-engineered ≈16k pieces)",
+        vocabSize: "≈16,200 (est.)",
         vocabMap: claudeOpusMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
@@ -219,21 +315,21 @@ window.TOKENIZER_VOCABS = (() => {
         costPer1M: { input: 5.00, output: 25.00 }
       },
       "grok-4": {
-        name: "xAI Grok 4 / Grok 4.5",
-        family: "Byte-Pair Encoding (131k)",
-        vocabSize: "131,000",
+        name: "xAI Grok 4 / 4.5 / 4.6",
+        family: "Byte-Pair Encoding (unpublished — community estimate ≈131k, cl100k-like)",
+        vocabSize: "131,072 (est.)",
         vocabMap: grokMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
         contextWindow: 500000,
-        costPer1M: { input: 3.00, output: 15.00 }
+        costPer1M: { input: 2.00, output: 6.00 }
       },
       "cohere-command-a": {
-        name: "Cohere Command A+",
-        family: "Byte-Pair Encoding (256k)",
-        vocabSize: "256,000",
+        name: "Cohere Command A+ / Command A",
+        family: "Byte-Pair Encoding (published tokenizer file)",
+        vocabSize: "255,000",
         vocabMap: cohereMap,
-        contextWindow: 131072,
+        contextWindow: 256000,
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 2.00, output: 8.00 }

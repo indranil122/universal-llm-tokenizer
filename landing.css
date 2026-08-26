@@ -19,6 +19,10 @@
   padding: 0;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 body {
   background-color: var(--bg-color);
   color: var(--text-primary);
@@ -29,6 +33,28 @@ body {
   padding: 0;
   margin: 0;
   display: flex;
+  position: relative;
+}
+
+/* Subtle grain texture — breaks digital flatness without leaving brutalism */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+::selection {
+  background: var(--accent-red);
+  color: #FFFFFF;
+}
+
+:focus-visible {
+  outline: 3px solid var(--accent-red);
+  outline-offset: 2px;
 }
 
 .brutalist-wrapper {
@@ -73,6 +99,7 @@ body {
   letter-spacing: -0.04em;
   padding: 4vw 2rem;
   border-bottom: 2px solid var(--grid-line);
+  text-wrap: balance;
 }
 .hero-subtitle {
   padding: 2rem;
@@ -84,7 +111,7 @@ body {
 /* Call to Action */
 .cta-container {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1.2fr 1fr 1fr;
   border-bottom: 2px solid var(--grid-line);
 }
 .btn-primary, .btn-secondary {
@@ -94,26 +121,30 @@ body {
   font-weight: 700;
   font-size: 1.5rem;
   font-family: 'Archivo Black', sans-serif;
-  transition: background 0.2s, color 0.2s, transform 0.1s;
+  transition: background 0.2s ease, color 0.2s ease, transform 0.12s ease;
 }
 .btn-primary {
   background: var(--text-primary);
   color: var(--bg-color);
-  border-right: 2px solid var(--grid-line);
+}
+.btn-secondary {
+  border-left: 2px solid var(--grid-line);
+  background: var(--bg-color);
+  color: var(--text-primary);
 }
 .btn-primary:hover {
   background: var(--accent-red);
 }
-.btn-primary:active, .btn-secondary:active {
-  transform: scale(0.98);
-}
-.btn-secondary {
-  background: var(--bg-color);
-  color: var(--text-primary);
-}
 .btn-secondary:hover {
   background: var(--grid-line);
   color: var(--bg-color);
+}
+.btn-secondary:nth-of-type(3):hover {
+  background: var(--accent-red);
+  color: #FFFFFF;
+}
+.btn-primary:active, .btn-secondary:active {
+  transform: scale(0.98);
 }
 
 /* Features Grid */
@@ -123,12 +154,13 @@ body {
   flex: 1;
 }
 .feature-card {
-  padding: 2rem;
+  padding: 2.5rem 2rem;
   border-right: 2px solid var(--grid-line);
-  transition: background 0.2s;
+  transition: background 0.2s ease, box-shadow 0.2s ease;
 }
 .feature-card:hover {
   background: rgba(0,0,0,0.05);
+  box-shadow: inset 0 -6px 0 var(--accent-red);
 }
 [data-theme="dark"] .feature-card:hover {
   background: rgba(255,255,255,0.05);
@@ -211,7 +243,7 @@ body {
   .landing-header { grid-template-columns: 1fr; }
   .logo { border-right: none; border-bottom: 2px solid var(--grid-line); }
   .cta-container { grid-template-columns: 1fr; }
-  .btn-primary { border-right: none; border-bottom: 2px solid var(--grid-line); }
+  .btn-secondary { border-left: none; border-top: 2px solid var(--grid-line); }
   .features-grid { grid-template-columns: 1fr; }
   .feature-card { border-right: none; border-bottom: 2px solid var(--grid-line); }
   .feature-card:last-child { border-bottom: none; }

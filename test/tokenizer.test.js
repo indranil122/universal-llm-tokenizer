@@ -65,8 +65,8 @@ test("all models expose required config fields + contextWindow", () => {
 
 test("exact models route to the real tiktoken data", () => {
   const exact = Object.entries(models).filter(([, c]) => c.exact);
-  assert.strictEqual(exact.length, 5, "expected exactly 5 exact models");
-  assert.deepStrictEqual(exact.map(([k]) => k).sort(), ["gpt-3", "gpt-4", "gpt-4o", "gpt-5", "llama-4"]);
+  assert.strictEqual(exact.length, 7, "expected exactly 7 exact models");
+  assert.deepStrictEqual(exact.map(([k]) => k).sort(), ["gpt-3", "gpt-4", "gpt-4-1", "gpt-4o", "gpt-5", "gpt-5-6", "llama-4"]);
   for (const [, c] of exact) {
     assert.ok(window.TIKTOKEN_DATA[c.tiktokenData], `missing tiktoken data for ${c.tiktokenData}`);
   }

@@ -4,7 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Universal LLM Tokenizer & Visualizer</title>
-  <meta name="description" content="Interactive visualizer showing how text, code, emojis, and non-English words are converted into subword tokens for GPT-5, Llama 4, Claude, Gemini 3, DeepSeek & 15 models.">
+  <meta name="description" content="Interactive visualizer showing how text, code, emojis, and non-English words are converted into subword tokens for GPT-5.6, Llama 4, Claude Fable 5, Gemini 3.1, Kimi K3 & 20+ models.">
+  <meta property="og:title" content="Universal LLM Tokenizer & Visualizer">
+  <meta property="og:description" content="Watch 20+ AI models tokenize your text in real time — exact tiktoken vocabularies, zero servers.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="social-preview.png">
+  <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="index.css">
@@ -32,6 +37,7 @@
         <button id="tabCompare" class="tab-btn">[ COMPARE MODELS ]</button>
         <button id="tabStepBPE" class="tab-btn">[ BPE STEP ENGINE ]</button>
         <button id="tabBattle" class="tab-btn">[ ALL MODELS ]</button>
+        <button id="tabLearn" class="tab-btn">[ LEARN ]</button>
       </nav>
 
       <div class="header-github">
@@ -58,37 +64,52 @@
         <span class="control-label">TARGET LLM MODEL:</span>
         <select id="modelSelect" class="select-dropdown">
           <optgroup label="OpenAI">
-            <option value="gpt-5" selected>OpenAI GPT-5 / GPT-5.x (o200k_base - 200k) ⭐ Current</option>
+            <option value="gpt-5-6" selected>OpenAI GPT-5.6 Sol / Terra / Luna (o200k_base - 200k) ⭐ Current</option>
+            <option value="gpt-5">OpenAI GPT-5 / GPT-5.x (o200k_base - 200k)</option>
+            <option value="gpt-oss">OpenAI gpt-oss-120b / 20b (o200k_harmony - 201k, open weights)</option>
+            <option value="gpt-4-1">OpenAI GPT-4.1 (o200k_base - 200k, 1M ctx, legacy)</option>
             <option value="gpt-4o">OpenAI GPT-4o / GPT-4o-mini (o200k_base - 200k, legacy)</option>
             <option value="gpt-4">OpenAI GPT-4 / GPT-3.5 Turbo (cl100k_base - 100k, legacy)</option>
-            <option value="gpt-3">OpenAI GPT-3 / GPT-2 / Codex (p50k / r50k - 50k, legacy)</option>
+            <option value="gpt-3">OpenAI GPT-3 / GPT-2 / Codex (p50k / r50k - 50k, retired)</option>
           </optgroup>
           <optgroup label="Meta AI">
-            <option value="llama-4">Meta Llama 4 Scout / Maverick (Llama 3 128k Tiktoken BPE)</option>
-            <option value="llama-2">Meta Llama 2 / Llama 1 (32k SentencePiece, legacy)</option>
+            <option value="llama-4">Meta Llama 4 Scout / Maverick (202k Tiktoken BPE)</option>
+            <option value="llama-2">Meta Llama 2 / Llama 1 (32k SentencePiece, retired)</option>
           </optgroup>
           <optgroup label="Anthropic">
-            <option value="claude-opus-5">Anthropic Claude Opus 5 (100k+ BPE)</option>
-            <option value="claude-sonnet-5">Anthropic Claude Sonnet 5 (100k+ BPE)</option>
+            <option value="claude-fable-5">Anthropic Claude Fable 5 / Mythos 5 (min-piece ≈16k, est.)</option>
+            <option value="claude-opus-5">Anthropic Claude Opus 5 (min-piece, est.)</option>
+            <option value="claude-sonnet-5">Anthropic Claude Sonnet 5 (min-piece, est.)</option>
           </optgroup>
           <optgroup label="Google DeepMind">
+            <option value="gemini-3-1-pro">Google Gemini 3.1 Pro / 3.5 Flash (256k Unigram) ⭐ Current</option>
             <option value="gemini-3-pro">Google Gemini 3 Pro / 3 Flash (256k Unigram)</option>
-            <option value="bert">Google BERT (WordPiece 30k, legacy)</option>
+            <option value="bert">Google BERT (WordPiece 30k, retired)</option>
           </optgroup>
           <optgroup label="DeepSeek AI">
-            <option value="deepseek-v4">DeepSeek V4 / V3.2 (128k Byte-fallback)</option>
+            <option value="deepseek-v4">DeepSeek V4 Pro / Flash (+ V3.2) (129k Byte-fallback)</option>
+          </optgroup>
+          <optgroup label="Moonshot AI">
+            <option value="kimi-k3">Moonshot Kimi K3 / K2.5 (164k Tiktoken BPE)</option>
           </optgroup>
           <optgroup label="Alibaba Cloud">
-            <option value="qwen-3-5">Alibaba Qwen 3.5 / Qwen Coder (151k BPE)</option>
+            <option value="qwen-3-5">Alibaba Qwen 3.5 / 3.6 / 3.8 (248k BPE)</option>
+            <option value="qwen-3-coder">Alibaba Qwen3 / Qwen Coder (151k BPE, legacy)</option>
+          </optgroup>
+          <optgroup label="Zhipu AI">
+            <option value="glm-5">Zhipu GLM-5 / GLM-5.2 (155k Byte-fallback BPE)</option>
+          </optgroup>
+          <optgroup label="MiniMax">
+            <option value="minimax-m2-5">MiniMax M2.5 / M2.1 / M2 (200k Byte-fallback BPE)</option>
           </optgroup>
           <optgroup label="Mistral AI">
-            <option value="mistral-large-3">Mistral Large 3 (Tekken BPE)</option>
+            <option value="mistral-large-3">Mistral Large 3 (Tekken BPE 131k)</option>
           </optgroup>
           <optgroup label="xAI">
-            <option value="grok-4">xAI Grok 4 / Grok 4.5 (131k BPE)</option>
+            <option value="grok-4">xAI Grok 4 / 4.5 / 4.6 (≈131k BPE, community est.)</option>
           </optgroup>
           <optgroup label="Cohere">
-            <option value="cohere-command-a">Cohere Command A+ (256k BPE)</option>
+            <option value="cohere-command-a">Cohere Command A+ / Command A (255k BPE)</option>
           </optgroup>
         </select>
         <span id="exactBadge" class="exact-badge hidden"></span>
@@ -144,26 +165,35 @@
             <span class="control-label">COMPARE WITH:</span>
             <select id="compareModelSelect" class="select-dropdown">
               <optgroup label="Meta AI">
-                <option value="llama-4" selected>Meta Llama 4 Scout / Maverick (128k BPE)</option>
-                <option value="llama-2">Meta Llama 2 (32k SentencePiece, legacy)</option>
+                <option value="llama-4" selected>Meta Llama 4 Scout / Maverick (202k BPE)</option>
+                <option value="llama-2">Meta Llama 2 (32k SentencePiece, retired)</option>
               </optgroup>
               <optgroup label="OpenAI">
+                <option value="gpt-5-6">OpenAI GPT-5.6 Sol / Terra / Luna (o200k_base)</option>
                 <option value="gpt-5">OpenAI GPT-5 (o200k_base)</option>
                 <option value="gpt-4o">OpenAI GPT-4o (o200k_base)</option>
                 <option value="gpt-4">OpenAI GPT-4 / 3.5 (cl100k_base, legacy)</option>
               </optgroup>
               <optgroup label="Anthropic">
+                <option value="claude-fable-5">Anthropic Claude Fable 5 / Mythos 5</option>
                 <option value="claude-sonnet-5">Anthropic Claude Sonnet 5</option>
               </optgroup>
               <optgroup label="Google">
+                <option value="gemini-3-1-pro">Google Gemini 3.1 Pro / Flash</option>
                 <option value="gemini-3-pro">Google Gemini 3 Pro / Flash</option>
                 <option value="bert">Google BERT (WordPiece)</option>
               </optgroup>
               <optgroup label="DeepSeek AI">
-                <option value="deepseek-v4">DeepSeek V4 / V3.2 (128k BPE)</option>
+                <option value="deepseek-v4">DeepSeek V4 Pro / Flash (+ V3.2)</option>
+              </optgroup>
+              <optgroup label="Moonshot AI">
+                <option value="kimi-k3">Moonshot Kimi K3 / K2.5</option>
+              </optgroup>
+              <optgroup label="Zhipu AI">
+                <option value="glm-5">Zhipu GLM-5 / GLM-5.2</option>
               </optgroup>
               <optgroup label="Alibaba">
-                <option value="qwen-3-5">Alibaba Qwen 3.5</option>
+                <option value="qwen-3-5">Alibaba Qwen 3.5 / 3.6 / 3.8</option>
               </optgroup>
             </select>
           </div>
@@ -252,6 +282,164 @@
           <div id="battleTableWrap"></div>
         </div>
       </article>
+    </div>
+
+    <!-- Learn Academy: curated videos & reading (Hidden by default) -->
+    <div id="learnView" class="hidden">
+
+      <section class="learn-intro card-panel">
+        <div class="card-header">
+          <h2 class="card-title">ACADEMY // WHY TOKENIZATION MATTERS</h2>
+        </div>
+        <div class="card-body">
+          <p class="learn-intro-text">
+            EVERY LLM PIPELINE STARTS WITH A TOKENIZER. IT DECIDES WHAT THE MODEL ACTUALLY "SEES":
+            WHY LLMs MIS-COUNT LETTERS, FAIL AT REVERSING STRINGS, STUMBLE ON NON-ENGLISH SCRIPTS,
+            AND WHY YOUR API BILL SPIKES. WATCH THESE HAND-PICKED LESSONS FROM THE PEOPLE WHO
+            BUILT MODERN AI — THEN COME BACK AND EXPERIMENT WITH THE PLAYGROUND.
+          </p>
+          <div class="learn-path">
+            <span class="path-chip">STEP 1 // WATCH BASICS</span>
+            <span class="path-arrow">&gt;&gt;</span>
+            <span class="path-chip">STEP 2 // BUILD A TOKENIZER</span>
+            <span class="path-arrow">&gt;&gt;</span>
+            <span class="path-chip">STEP 3 // TEST IN PLAYGROUND</span>
+          </div>
+        </div>
+      </section>
+
+      <h3 class="section-title">VIDEO // TOKENIZATION DEEP DIVES</h3>
+      <div class="learn-grid">
+        <a class="learn-card" href="https://www.youtube.com/watch?v=zduSFxRajkE" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge badge-hot">&#9654; MUST WATCH</span>
+            <span class="learn-level level-advanced">ADVANCED // 2H 13M</span>
+          </div>
+          <h4 class="learn-card-title">LET'S BUILD THE GPT TOKENIZER</h4>
+          <p class="learn-author">ANDREJ KARPATHY (EX-OPENAI / TESLA AI)</p>
+          <p class="learn-desc">THE definitive tokenizer lecture. Build BPE from scratch in Python, then understand every famous quirk: why LLMs can't spell, the trailing-space trap, YAML vs JSON efficiency, and the SolidGoldMagikarp glitch.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+        <a class="learn-card" href="https://www.youtube.com/watch?v=LPZh9BOjkQs" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge badge-start">&#9654; START HERE</span>
+            <span class="learn-level level-beginner">BEGINNER // 7 MIN</span>
+          </div>
+          <h4 class="learn-card-title">LARGE LANGUAGE MODELS EXPLAINED BRIEFLY</h4>
+          <p class="learn-author">3BLUE1BROWN</p>
+          <p class="learn-desc">The gentlest possible intro to LLMs, chatbots, pretraining, and transformers. Perfect first watch before touching tokenization math.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+        <a class="learn-card" href="https://www.youtube.com/watch?v=wjZofJX0v4M" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge">&#9654; VISUAL INTRO</span>
+            <span class="learn-level level-beginner">BEGINNER // 27 MIN</span>
+          </div>
+          <h4 class="learn-card-title">TRANSFORMERS, THE TECH BEHIND LLMs (DEEP LEARNING CH. 5)</h4>
+          <p class="learn-author">3BLUE1BROWN</p>
+          <p class="learn-desc">World-class animation showing where tokens go after the tokenizer: embeddings, softmax with temperature, and the predict-sample-repeat loop.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+        <a class="learn-card" href="https://www.youtube.com/watch?v=eMlx5fFNoYc" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge">&#9654; NEXT STEP</span>
+            <span class="learn-level level-intermediate">INTERMEDIATE // 27 MIN</span>
+          </div>
+          <h4 class="learn-card-title">ATTENTION IN TRANSFORMERS, VISUALLY EXPLAINED (CH. 6)</h4>
+          <p class="learn-author">3BLUE1BROWN</p>
+          <p class="learn-desc">After tokens come attention. See visually how token vectors interact inside the transformer's heart.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+        <a class="learn-card" href="https://www.youtube.com/watch?v=9-Jl0dxWQs8" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge">&#9654; DEEPER</span>
+            <span class="learn-level level-intermediate">INTERMEDIATE // 20 MIN</span>
+          </div>
+          <h4 class="learn-card-title">HOW MIGHT LLMs STORE FACTS?</h4>
+          <p class="learn-author">3BLUE1BROWN</p>
+          <p class="learn-desc">Follows a token through MLP layers to understand how models store knowledge. Completes the 3B1B transformer trilogy.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+      </div>
+
+      <h3 class="section-title">VIDEO // LLM FUNDAMENTALS &amp; FULL COURSES</h3>
+      <div class="learn-grid">
+        <a class="learn-card" href="https://www.youtube.com/watch?v=zjkBMFhNj_g" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge badge-start">&#9654; 1-HR OVERVIEW</span>
+            <span class="learn-level level-beginner">BEGINNER // 59 MIN</span>
+          </div>
+          <h4 class="learn-card-title">[1HR TALK] INTRO TO LARGE LANGUAGE MODELS</h4>
+          <p class="learn-author">ANDREJ KARPATHY</p>
+          <p class="learn-desc">A complete mental model of modern AI in one hour: pretraining, fine-tuning, RLHF, scaling laws, and where LLMs are going.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+        <a class="learn-card" href="https://www.youtube.com/watch?v=kCc8FmEb1nY" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge">&#9654; BUILD IT</span>
+            <span class="learn-level level-intermediate">INTERMEDIATE // 1H 56M</span>
+          </div>
+          <h4 class="learn-card-title">LET'S BUILD GPT: FROM SCRATCH, IN CODE</h4>
+          <p class="learn-author">ANDREJ KARPATHY</p>
+          <p class="learn-desc">The legendary follow-along: code a mini GPT character-by-character. Includes the tokenization step that feeds the whole pipeline.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+        <a class="learn-card" href="https://www.youtube.com/watch?v=7xTGNNLPyMI" target="_blank" rel="noopener noreferrer">
+          <div class="learn-card-top">
+            <span class="learn-badge">&#9654; FULL DEEP DIVE</span>
+            <span class="learn-level level-advanced">ADVANCED // 3H 31M</span>
+          </div>
+          <h4 class="learn-card-title">DEEP DIVE INTO LLMs LIKE CHATGPT</h4>
+          <p class="learn-author">ANDREJ KARPATHY</p>
+          <p class="learn-desc">The most comprehensive free LLM course on YouTube — pretraining data, tokenization details, model training, hallucinations, and tool use.</p>
+          <span class="learn-cta">WATCH ON YOUTUBE &#8599;</span>
+        </a>
+      </div>
+
+      <h3 class="section-title">READING // GUIDES, PAPERS &amp; OFFICIAL DOCS</h3>
+      <div class="read-grid">
+        <a class="read-card" href="https://github.com/karpathy/minbpe" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">CODE // PYTHON</span>
+          <h4>MINBPE — MINIMAL BPE IMPLEMENTATION</h4>
+          <p>Karpathy's ~100-line reference implementation of Byte Pair Encoding. The perfect companion to this project's JS engine.</p>
+        </a>
+        <a class="read-card" href="https://www.fast.ai/posts/2025-10-16-karpathy-tokenizers/" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">GUIDE // TEXT VERSION</span>
+          <h4>TOKENIZERS AS A BOOK CHAPTER (FAST.AI)</h4>
+          <p>The full Karpathy tokenizer lecture converted into an illustrated text chapter with inline code — read instead of watch.</p>
+        </a>
+        <a class="read-card" href="https://huggingface.co/learn/nlp-course/chapter6/1" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">COURSE // HF</span>
+          <h4>HUGGING FACE NLP COURSE — CH. 6 TOKENIZERS</h4>
+          <p>BPE, WordPiece, and Unigram explained algorithm-by-algorithm by the team behind the industry-standard tokenizers library.</p>
+        </a>
+        <a class="read-card" href="https://platform.openai.com/tokenizer" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">TOOL // OFFICIAL</span>
+          <h4>OPENAI TOKENIZER PLAYGROUND</h4>
+          <p>OpenAI's official web tokenizer for o200k/cl100k. Cross-check results against this app's exact engines.</p>
+        </a>
+        <a class="read-card" href="https://github.com/openai/tiktoken" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">LIBRARY // OPENAI</span>
+          <h4>TIKTOKEN — OFFICIAL OPENAI LIBRARY</h4>
+          <p>The production BPE library this project byte-matches against. Read the source of truth used by every OpenAI API call.</p>
+        </a>
+        <a class="read-card" href="http://jalammar.github.io/illustrated-transformer/" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">BLOG // CLASSIC</span>
+          <h4>THE ILLUSTRATED TRANSFORMER</h4>
+          <p>Jay Alammar's iconic visual explanation of transformers — the article half the industry learned from.</p>
+        </a>
+        <a class="read-card" href="https://bbycroft.net/llm" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">VIZ // INTERACTIVE</span>
+          <h4>LLM VISUALIZATION BY BRENDAN BYCROFT</h4>
+          <p>Fly through a 3D interactive diagram of a full GPT architecture, layer by layer, matrix by matrix.</p>
+        </a>
+        <a class="read-card" href="https://github.com/openai/openai-cookbook" target="_blank" rel="noopener noreferrer">
+          <span class="read-tag">DOCS // COOKBOOK</span>
+          <h4>OPENAI COOKBOOK — MANAGING TOKENS</h4>
+          <p>Practical recipes: counting tokens for API calls, chat formatting, embeddings, and cost control.</p>
+        </a>
+      </div>
+
     </div>
 
   </main>
