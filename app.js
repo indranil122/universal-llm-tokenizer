@@ -647,6 +647,39 @@ document.addEventListener("DOMContentLoaded", () => {
   // Deep-link support: app.html#learn opens the Learn Academy directly
   if (window.location.hash === "#learn") switchTab("learn");
 
+  // Learn Academy: inline YouTube player (facade pattern — the iframe is only
+  // injected on first click, so the page loads with zero third-party JS)
+  document.querySelectorAll(".learn-card[data-yt]").forEach(card => {
+    const play = () => {
+      if (card.classList.contains("playing")) return;
+      const id = card.getAttribute("data-yt");
+      const titleEl = card.querySelector(".learn-card-title");
+      const media = card.querySelector(".learn-media");
+      if (!id || !media) return;
+      const frame = document.createElement("iframe");
+      frame.className = "yt-frame";
+      frame.src = "https://www.youtube-nocookie.com/embed/" + encodeURIComponent(id) + "?autoplay=1&rel=0";
+      frame.title = titleEl ? titleEl.textContent : "YouTube video";
+      frame.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share";
+      frame.allowFullscreen = true;
+      media.innerHTML = "";
+      media.appendChild(frame);
+      card.classList.add("playing");
+      const cta = card.querySelector(".learn-cta");
+      if (cta) cta.textContent = "// NOW PLAYING";
+    };
+    card.addEventListener("click", (e) => {
+      if (e.target.closest(".media-ext")) return;
+      play();
+    });
+    card.addEventListener("keydown", (e) => {
+      if ((e.key === "Enter" || e.key === " ") && !e.target.closest(".media-ext")) {
+        e.preventDefault();
+        play();
+      }
+    });
+  });
+
   // Utility to escape HTML
   function escapeHtml(str) {
     return String(str)
