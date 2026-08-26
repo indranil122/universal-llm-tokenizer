@@ -4,7 +4,7 @@
 
 # 🤖 Universal LLM Tokenizer & Visualizer
 
-### *Paste a prompt. Watch 24 AI models fight over it — token by token.*
+### *Paste a prompt. Watch 24 AI models fight over it - token by token.*
 
 **See exactly how GPT-5.6, Claude Fable 5, Gemini 3.1, Llama 4, Kimi K3, DeepSeek V4 & 20 more models slice your text into subword tokens — live, color-coded, with byte-exact token IDs.**
 
