@@ -97,12 +97,20 @@ function parseHfTokenizer(file) {
   for (const t of j.added_tokens || []) {
     if (t.special) special[t.content] = t.id;
   }
-  // the GPT-2 style pre-tokenizer split regex lives in pre_tokenizer
+  // the GPT-2 style pre-tokenizer split regex lives in pre_tokenizer.
+  // Some tokenizers (e.g. Cohere) use a Sequence of Splits — prefer the
+  // LONGEST regex, which is always the main word pattern (digit-grouping
+  // side-rules are subsumed by the main pattern's \p{N}{1,3}).
   const splitRegex = (function find(o) {
-    if (!o || typeof o !== "object") return null;
-    if (o.type === "Split" && o.pattern && o.pattern.Regex) return o.pattern.Regex;
-    for (const k of Object.keys(o)) { const r = find(o[k]); if (r) return r; }
-    return null;
+    let best = null;
+    (function walk(node) {
+      if (!node || typeof node !== "object") return;
+      if (node.type === "Split" && node.pattern && node.pattern.Regex) {
+        if (!best || node.pattern.Regex.length > best.length) best = node.pattern.Regex;
+      }
+      for (const k of Object.keys(node)) { if (node[k] && typeof node[k] === "object") walk(node[k]); }
+    })(o);
+    return best;
   })(j.pre_tokenizer);
   return { rankEntries, vocabEntries, special, splitRegex };
 }
@@ -149,6 +157,53 @@ for (const name of ["o200k_base", "cl100k_base", "p50k_base"]) {
   const { rankEntries, vocabEntries, special, splitRegex } = parseHfTokenizer(path.join(RAW, "llama3_tokenizer.json"));
   const patStr = splitRegex || (REGISTRY["cl100k_base"] || {}).pat_str || "";
   emit("llama3", rankEntries, vocabEntries, special, patStr);
+}
+
+// Qwen3 (Qwen3-0.6B): HF GPT2-type BPE — same pipeline as Llama 3.
+if (fs.existsSync(path.join(RAW, "qwen3_tokenizer.json"))) {
+  const { rankEntries, vocabEntries, special, splitRegex } = parseHfTokenizer(path.join(RAW, "qwen3_tokenizer.json"));
+  const patStr = splitRegex || (REGISTRY["o200k_base"] || {}).pat_str || "";
+  emit("qwen3", rankEntries, vocabEntries, special, patStr);
+}
+
+// Qwen3.5: expanded ~248k vocabulary, same HF GPT2-type BPE pipeline.
+if (fs.existsSync(path.join(RAW, "qwen35_tokenizer.json"))) {
+  const { rankEntries, vocabEntries, special, splitRegex } = parseHfTokenizer(path.join(RAW, "qwen35_tokenizer.json"));
+  const patStr = splitRegex || (REGISTRY["o200k_base"] || {}).pat_str || "";
+  emit("qwen35", rankEntries, vocabEntries, special, patStr);
+}
+
+// Cohere Command A+ : officially published tokenizer (255k BPE).
+if (fs.existsSync(path.join(RAW, "cohere_tokenizer.json"))) {
+  const { rankEntries, vocabEntries, special, splitRegex } = parseHfTokenizer(path.join(RAW, "cohere_tokenizer.json"));
+  const patStr = splitRegex || (REGISTRY["o200k_base"] || {}).pat_str || "";
+  emit("cohere", rankEntries, vocabEntries, special, patStr);
+}
+
+// o200k_harmony (gpt-oss): identical mergeable ranks + pat_str as o200k_base,
+// with the extended harmony special-token block (official openai_public.py).
+{
+  const harmonySpecials = {
+    "<|startoftext|>": 199998,
+    "<|endoftext|>": 199999,
+    "<|return|>": 200002,
+    "<|constrain|>": 200003,
+    "<|channel|>": 200005,
+    "<|start|>": 200006,
+    "<|end|>": 200007,
+    "<|message|>": 200008,
+    "<|call|>": 200012
+  };
+  for (let i = 200000; i <= 201087; i++) {
+    if (!Object.values(harmonySpecials).includes(i)) harmonySpecials[`<|reserved_${i}|>`] = i;
+  }
+  if (fs.existsSync(path.join(RAW, "o200k_base.tiktoken"))) {
+    const entries = parseTiktoken(path.join(RAW, "o200k_base.tiktoken"));
+    const patStr = (REGISTRY["o200k_base"] || {}).pat_str || "";
+    // reserved tokens are not in the .tiktoken file; keep them out of ranks/vocab
+    // and expose them only through `special` (same as the official runtime does).
+    emit("o200k_harmony", entries, entries, harmonySpecials, patStr);
+  }
 }
 
 console.log("Done. Raw files can be deleted: tokenizers/data/raw/");

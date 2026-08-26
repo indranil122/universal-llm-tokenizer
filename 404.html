@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Routing…</title>
+  <script>
+    // GitHub Pages has no server rewrites, so unknown paths land here.
+    // This is the standard static-host SPA fallback: resolve the intended
+    // route, stash it, and bounce to the real document which finishes
+    // the job via the History-API router in app.js.
+    (function () {
+      var path = location.pathname.replace(/\/+$/, "");
+      var seg = path.split("/").pop() || "";
+      var known = ["playground", "compare", "bpe", "battle", "guess", "learn", "app"];
+      var base = "/";
+      var m = location.pathname.match(/^\/([^/]+)\//);
+      if (m && seg !== "") base = "/" + m[1] + "/";
+
+      if (known.indexOf(seg) !== -1) {
+        try { sessionStorage.setItem("tokenizer-route", seg === "app" ? "playground" : seg); } catch (e) {}
+        var q = location.search || "";
+        location.replace(base + "app.html" + q);
+        return;
+      }
+      // Anything else: treat as a plain miss and go home.
+      location.replace(base);
+    })();
+  </script>
+  <style>
+    body { background: #050505; color: #F4F4F0; font-family: 'Space Mono', monospace; display: flex; align-items: center; justify-content: center; height: 100vh; margin: 0; text-transform: uppercase; letter-spacing: .08em; }
+    a { color: #FF2A2A; }
+  </style>
+</head>
+<body>
+  <main>
+    <p>ROUTING TOKEN… IF YOU ARE NOT REDIRECTED, <a href="/">GO HOME</a>.</p>
+  </main>
+</body>
+</html>

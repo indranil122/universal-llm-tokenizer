@@ -37,10 +37,14 @@
         <button id="tabCompare" class="tab-btn">[ COMPARE MODELS ]</button>
         <button id="tabStepBPE" class="tab-btn">[ BPE STEP ENGINE ]</button>
         <button id="tabBattle" class="tab-btn">[ ALL MODELS ]</button>
+        <button id="tabGuess" class="tab-btn">[ GUESS ]</button>
         <button id="tabLearn" class="tab-btn">[ LEARN ]</button>
       </nav>
 
       <div class="header-github">
+        <button id="btnTour" class="preset-btn" title="Take a quick guided tour">
+          [ ? TOUR ]
+        </button>
         <button id="themeToggleBtnApp" class="preset-btn">
           [ TOGGLE DARK/LIGHT ]
         </button>
@@ -57,6 +61,25 @@
 
   <!-- Main Container -->
   <main class="main-wrapper brutalist-wrapper">
+
+    <!-- Self-Portrait in Hex: each glyph is drawn with its own UTF-8 code -->
+    <section class="ascii-hero" aria-label="ASCII artwork spelling TOKENS using hexadecimal codes">
+      <pre class="ascii-art" id="asciiArt"></pre>
+      <div class="ascii-side">
+        <p class="ascii-kicker">// SELF-PORTRAIT IN HEX</p>
+        <p class="ascii-caption">
+          EVERY LETTER OF THIS ARTWORK IS PAINTED WITH ITS OWN UTF-8 CODE —
+          T=0x54 · O=0x4F · K=0x4B · E=0x45 · N=0x4E · S=0x53.
+          THE SAME BYTES YOUR PROMPT BECOMES BEFORE A MODEL SEES A WORD.
+        </p>
+        <p class="ascii-dump" id="asciiDump"></p>
+        <div class="ascii-chips">
+          <span class="path-chip">24 MODELS</span>
+          <span class="path-chip">11 EXACT VOCABS</span>
+          <span class="path-chip">0 SERVERS</span>
+        </div>
+      </div>
+    </section>
 
     <!-- Control & Preset Bar -->
     <section class="control-bar">
@@ -150,6 +173,20 @@
             <h2 class="card-title">OUTPUT // TOKENS VISUALIZER</h2>
             <button id="viewToggle" class="view-toggle" title="Switch between token pills and byte-length bars">[ VIEW: BARS ]</button>
           </div>
+          <div class="export-bar">
+            <button id="btnShareLink" class="preset-btn" title="Copy a permalink that reopens this exact text + model">
+              [ &#128279; SHARE LINK ]
+            </button>
+            <button id="btnCopyPy" class="preset-btn" title="Copy a ready-to-run Python tiktoken snippet for this text">
+              [ 🐍 COPY PY ]
+            </button>
+            <button id="btnExportJson" class="preset-btn" title="Download every token (id, bytes, hex, range) as JSON">
+              [ { } JSON ]
+            </button>
+            <button id="btnExportCsv" class="preset-btn" title="Download the token table as CSV">
+              [ ▦ CSV ]
+            </button>
+          </div>
           <div class="card-body">
             <div id="tokensDisplayBox" class="tokens-display-box"></div>
           </div>
@@ -239,6 +276,17 @@
         <div id="scriptChips" class="script-chips"><span class="script-chip muted">AWAITING TEXT INPUT...</span></div>
       </section>
 
+      <!-- Drag & Drop File Cost Analyzer -->
+      <section class="filedrop-section" id="fileDropSection">
+        <h3 class="section-title">COST LAB // DROP A FILE, SEE WHAT EVERY MODEL WOULD CHARGE</h3>
+        <div id="fileDropZone" class="file-drop-zone" tabindex="0" role="button" aria-label="Choose or drop a text file">
+          <input type="file" id="fileInput" hidden>
+          <p class="fdz-main">⬇ DRAG &amp; DROP A .TXT / .MD / .PY / .JSON / ANY TEXT FILE</p>
+          <p class="fdz-sub">OR CLICK TO BROWSE — ANALYZED 100% LOCALLY, NOTHING IS UPLOADED</p>
+        </div>
+        <div id="fileAnalysisWrap" class="hidden"></div>
+      </section>
+
       <!-- Prompt Word to Token Mapping Matrix Table -->
       <section class="mapping-section">
         <h3 class="section-title">DATA // PROMPT WORD BREAKDOWN MATRIX</h3>
@@ -270,6 +318,62 @@
           </div>
         </div>
       </article>
+
+      <!-- Train Your Own BPE Tokenizer -->
+      <article class="card-panel">
+        <div class="card-header">
+          <h2 class="card-title">LABORATORY // TRAIN YOUR OWN BPE TOKENIZER</h2>
+        </div>
+        <div class="card-body">
+          <p class="train-intro">
+            THIS IS THE ALGORITHM BEHIND GPT, LLAMA &amp; MISTRAL VOCABULARIES — RUNNING LIVE IN YOUR BROWSER.
+            FEED IT A CORPUS AND WATCH IT DISCOVER SUBWORDS, EXACTLY LIKE KARPATHY'S MINBPE.
+          </p>
+          <textarea id="trainCorpus" class="prompt-textarea train-corpus" spellcheck="false">the tokenizer tokenizes tokens into subword tokens. tokenization training trains the tokenizer on text so the model can tokenize any string. a good vocabulary keeps common words whole and splits rare words into subwords.</textarea>
+          <div class="train-controls">
+            <label class="control-label" for="trainMerges">MERGES:</label>
+            <input type="number" id="trainMerges" class="select-dropdown train-num" min="1" max="200" value="24">
+            <button id="btnTrainBPE" class="btn-action">&#9654; TRAIN TOKENIZER</button>
+            <span id="trainStatus" class="train-status"></span>
+          </div>
+          <div id="trainBPEOutput" class="train-output hidden"></div>
+          <div class="train-encode-row">
+            <label class="control-label" for="encodeSample">THEN ENCODE NEW TEXT WITH YOUR MODEL:</label>
+            <input type="text" id="encodeSample" class="select-dropdown train-sample" value="tokenization is fun" placeholder="type text...">
+            <button id="btnEncodeSample" class="preset-btn">[ ENCODE ]</button>
+          </div>
+          <div id="encodeSampleResult" class="tokens-display-box encode-result hidden"></div>
+        </div>
+      </article>
+    </div>
+
+    <!-- Guess-the-Tokens Game (Hidden by default) -->
+    <div id="guessView" class="hidden">
+      <article class="card-panel">
+        <div class="card-header">
+          <h2 class="card-title">GAME // GUESS THE TOKEN COUNT</h2>
+          <span class="guess-model-tag">SCORING MODEL: GPT-5.6 // EXACT O200K</span>
+        </div>
+        <div class="card-body">
+          <div class="guess-scorebar">
+            <div class="metric-card"><div class="metric-label">ROUND</div><div id="gRound" class="metric-value">0</div></div>
+            <div class="metric-card"><div class="metric-label">SCORE</div><div id="gScore" class="metric-value">0</div></div>
+            <div class="metric-card"><div class="metric-label">STREAK</div><div id="gStreak" class="metric-value">0</div></div>
+            <div class="metric-card"><div class="metric-label">BEST STREAK</div><div id="gBest" class="metric-value">0</div></div>
+          </div>
+
+          <p class="guess-question">HOW MANY TOKENS DOES <b>GPT-5.6</b> SEE HERE?</p>
+          <div id="gPhrase" class="guess-phrase">…</div>
+
+          <div class="guess-controls">
+            <input type="number" id="gInput" class="select-dropdown guess-input" min="0" placeholder="?">
+            <button id="btnGuessSubmit" class="btn-action">GUESS</button>
+            <button id="btnGuessNext" class="btn-action hidden">NEXT ROUND &#9654;</button>
+          </div>
+
+          <div id="gFeedback" class="guess-feedback hidden"></div>
+        </div>
+      </article>
     </div>
 
     <!-- All-Models Token Battle (Hidden by default) -->
@@ -297,6 +401,7 @@
             WHY LLMs MIS-COUNT LETTERS, FAIL AT REVERSING STRINGS, STUMBLE ON NON-ENGLISH SCRIPTS,
             AND WHY YOUR API BILL SPIKES. WATCH THESE HAND-PICKED LESSONS FROM THE PEOPLE WHO
             BUILT MODERN AI — THEN COME BACK AND EXPERIMENT WITH THE PLAYGROUND.
+            VIDEOS PLAY RIGHT HERE — CLICK ANY CARD.
           </p>
           <div class="learn-path">
             <span class="path-chip">STEP 1 // WATCH BASICS</span>
@@ -305,8 +410,54 @@
             <span class="path-arrow">&gt;&gt;</span>
             <span class="path-chip">STEP 3 // TEST IN PLAYGROUND</span>
           </div>
+          <div class="glossary-row">
+            <span class="glossary" tabindex="0" data-def="Byte-Pair Encoding: the algorithm that starts from raw bytes and repeatedly merges the most frequent adjacent pair into new vocabulary entries. Used by GPT, Llama, Mistral and most modern LLMs.">BPE?</span>
+            <span class="glossary" tabindex="0" data-def="A chunk between a character and a word — like 'token', 'ization' or 'Ġthe'. Models read subwords because keeping every whole word in the vocabulary would be enormous.">SUBWORD?</span>
+            <span class="glossary" tabindex="0" data-def="The fixed list of tokens a model can emit — GPT-5 has ~200k, BERT only ~30k. Bigger vocabularies usually compress text into fewer tokens.">VOCABULARY?</span>
+            <span class="glossary" tabindex="0" data-def="How many tokens fit in one conversation. Your prompt plus the reply must both fit — and you pay for every token.">CONTEXT WINDOW?</span>
+          </div>
         </div>
       </section>
+
+      <h3 class="section-title">MUSEUM // FAMOUS TOKENIZATION QUIRKS — SEE THEM LIVE</h3>
+      <div class="museum-grid">
+        <article class="museum-card" data-exhibit="strawberry">
+          <div class="mc-top"><span class="learn-badge badge-hot">EXHIBIT 01</span><span class="learn-level">GPT-5.6</span></div>
+          <h4 class="learn-card-title">THE STRAWBERRY PROBLEM</h4>
+          <p class="learn-desc">Why LLMs famously miscount letters: the model never sees "s-t-r-a-w-b-e-r-r-y", it sees opaque token IDs. Ask it to count letters and it's guessing from vibes.</p>
+          <button class="btn-action museum-load" type="button">[ LOAD IN PLAYGROUND ]</button>
+        </article>
+        <article class="museum-card" data-exhibit="trailing-space">
+          <div class="mc-top"><span class="learn-badge">EXHIBIT 02</span><span class="learn-level">GPT-4 // CL100K</span></div>
+          <h4 class="learn-card-title">THE TRAILING SPACE TRAP</h4>
+          <p class="learn-desc">One invisible space at the end of your prompt changes the tokenization of everything. OpenAI's own API used to warn about it. Load it and inspect the last tokens.</p>
+          <button class="btn-action museum-load" type="button">[ LOAD IN PLAYGROUND ]</button>
+        </article>
+        <article class="museum-card" data-exhibit="magikarp">
+          <div class="mc-top"><span class="learn-badge badge-hot">EXHIBIT 03</span><span class="learn-level">GPT-3 // P50K</span></div>
+          <h4 class="learn-card-title">SOLIDGOLDMAGIKARP</h4>
+          <p class="learn-desc">A Reddit username became a single token during training, then almost never appeared again. Prompt models with it and they glitch out — the most famous tokenizer bug ever.</p>
+          <button class="btn-action museum-load" type="button">[ LOAD IN PLAYGROUND ]</button>
+        </article>
+        <article class="museum-card" data-exhibit="nonenglish">
+          <div class="mc-top"><span class="learn-badge">EXHIBIT 04</span><span class="learn-level">ANY MODEL</span></div>
+          <h4 class="learn-card-title">THE NON-ENGLISH TAX</h4>
+          <p class="learn-desc">"Hello World!" is ~3 tokens. The same idea in Hindi or Japanese can cost 5–10&times; more. This is why AI feels worse outside English — and why bills spike.</p>
+          <button class="btn-action museum-load" type="button">[ LOAD IN PLAYGROUND ]</button>
+        </article>
+        <article class="museum-card" data-exhibit="numbers">
+          <div class="mc-top"><span class="learn-badge">EXHIBIT 05</span><span class="learn-level">GPT-5.6</span></div>
+          <h4 class="learn-card-title">NUMBER SLICING</h4>
+          <p class="learn-desc">The BPE regex chops digits into groups of at most 3. Watch 1234567890 shatter — one reason LLMs fumble arithmetic on long numbers.</p>
+          <button class="btn-action museum-load" type="button">[ LOAD IN PLAYGROUND ]</button>
+        </article>
+        <article class="museum-card" data-exhibit="zwjemoji">
+          <div class="mc-top"><span class="learn-badge">EXHIBIT 06</span><span class="learn-level">GPT-5.6</span></div>
+          <h4 class="learn-card-title">THE EMOJI FAMILY PORTRAIT</h4>
+          <p class="learn-desc">&#128104;&#8205;&#128105;&#8205;&#128103;&#8205;&#128102; is ONE emoji to you — but a zero-width joiner chain of many code points to the tokenizer. Count how many tokens one family costs.</p>
+          <button class="btn-action museum-load" type="button">[ LOAD IN PLAYGROUND ]</button>
+        </article>
+      </div>
 
       <h3 class="section-title">VIDEO // TOKENIZATION DEEP DIVES</h3>
       <div class="learn-grid">
@@ -501,6 +652,20 @@
     <div class="popover-row"><span class="popover-key">CHAR RANGE:</span><span id="popoverRange" class="popover-val">0 – 0</span></div>
   </div>
 
+  <!-- Guided Tour Overlay -->
+  <div id="tourOverlay" class="tour-overlay hidden">
+    <div class="tour-card" id="tourCard" role="dialog" aria-label="Guided tour">
+      <div class="tour-step-tag" id="tourStepTag">TOUR // STEP 1</div>
+      <h4 class="tour-title" id="tourTitle"></h4>
+      <p class="tour-body" id="tourBody"></p>
+      <div class="tour-controls">
+        <button id="tourSkip" class="preset-btn">[ SKIP ]</button>
+        <span id="tourProgress" class="tour-progress">1 / 5</span>
+        <button id="tourNext" class="btn-action">NEXT &#9654;</button>
+      </div>
+    </div>
+  </div>
+
   <!-- GitHub Update Modal -->
   <div id="githubModalOverlay" class="modal-overlay hidden">
     <div class="modal-box brutalist-modal">
@@ -519,7 +684,7 @@
     <div class="app-footer-inner">
       <a class="af-brand" href="index.html">UNIVERSAL LLM TOKENIZER</a>
       <nav class="af-links" aria-label="Footer navigation">
-        <a href="app.html#learn">[ LEARN ACADEMY ]</a>
+        <a href="app.html?tab=learn">[ LEARN ACADEMY ]</a>
         <a href="https://indranil122.github.io/universal-llm-tokenizer/" target="_blank" rel="noopener noreferrer">[ LIVE DEMO ]</a>
         <a href="https://github.com/indranil122/universal-llm-tokenizer" target="_blank" rel="noopener noreferrer">[ SOURCE // GITHUB ]</a>
       </nav>

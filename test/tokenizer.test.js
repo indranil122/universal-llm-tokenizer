@@ -17,11 +17,15 @@ require("../tokenizers/wordpiece.js");
 require("../tokenizers/sentencepiece.js");
 require("../tokenizers/tiktoken.js");
 
-// Exact vocabulary data (real tiktoken / Llama 3 files)
+// Exact vocabulary data (real tiktoken / Llama 3 / Qwen / Cohere files)
 require("../tokenizers/data/o200k_base.js");
 require("../tokenizers/data/cl100k_base.js");
 require("../tokenizers/data/p50k_base.js");
 require("../tokenizers/data/llama3.js");
+require("../tokenizers/data/qwen3.js");
+require("../tokenizers/data/qwen35.js");
+require("../tokenizers/data/cohere.js");
+require("../tokenizers/data/o200k_harmony.js");
 
 const { models } = window.TOKENIZER_VOCABS;
 
@@ -65,10 +69,33 @@ test("all models expose required config fields + contextWindow", () => {
 
 test("exact models route to the real tiktoken data", () => {
   const exact = Object.entries(models).filter(([, c]) => c.exact);
-  assert.strictEqual(exact.length, 7, "expected exactly 7 exact models");
-  assert.deepStrictEqual(exact.map(([k]) => k).sort(), ["gpt-3", "gpt-4", "gpt-4-1", "gpt-4o", "gpt-5", "gpt-5-6", "llama-4"]);
+  assert.strictEqual(exact.length, 11, "expected exactly 11 exact models");
+  assert.deepStrictEqual(exact.map(([k]) => k).sort(), [
+    "cohere-command-a", "gpt-3", "gpt-4", "gpt-4-1", "gpt-4o", "gpt-5", "gpt-5-6",
+    "gpt-oss", "llama-4", "qwen-3-5", "qwen-3-coder"
+  ]);
   for (const [, c] of exact) {
     assert.ok(window.TIKTOKEN_DATA[c.tiktokenData], `missing tiktoken data for ${c.tiktokenData}`);
+  }
+});
+
+test("exact vocabularies have the published sizes", () => {
+  const expected = {
+    o200k_base: 199998,          // + 2 special = 200k family
+    cl100k_base: 100256,         // + 5 special
+    p50k_base: 50280,
+    llama3: { min: 128000 },
+    qwen3: { min: 151643 },      // Qwen3 published: 151,643 mergeable + specials
+    qwen35: { min: 248044 },     // Qwen3.5 expanded vocabulary
+    cohere: 255000,              // Command A+ official: exactly 255,000
+    o200k_harmony: 199998        // + 1090 harmony specials = 201,088 total
+  };
+  for (const [name, want] of Object.entries(expected)) {
+    const data = window.TIKTOKEN_DATA[name];
+    assert.ok(data, `missing encoding ${name}`);
+    const count = data.vocab ? data.vocab.split("\n").length : data.ranks.split("\n").length;
+    if (typeof want === "number") assert.strictEqual(count, want, `${name} vocab size`);
+    else assert.ok(count >= want.min, `${name} vocab size >= ${want.min}`);
   }
 });
 

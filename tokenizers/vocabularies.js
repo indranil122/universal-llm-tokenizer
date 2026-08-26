@@ -131,10 +131,12 @@ window.TOKENIZER_VOCABS = (() => {
       },
       "gpt-oss": {
         name: "OpenAI gpt-oss-120b / 20b (open weights)",
-        family: "Byte-Pair Encoding (o200k_harmony, approximated with o200k_base)",
+        family: "Byte-Pair Encoding (o200k_harmony)",
         vocabSize: "201,088",
         vocabMap: gpt4oMap,
         contextWindow: 131072,
+        exact: true,
+        tiktokenData: "o200k_harmony",
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 0.10, output: 0.50 }
@@ -235,22 +237,26 @@ window.TOKENIZER_VOCABS = (() => {
       },
       "qwen-3-5": {
         name: "Alibaba Qwen 3.5 / 3.6 / 3.8",
-        family: "Byte-Fallback BPE (~248k, expanded from Qwen3's 151k)",
+        family: "Byte-Fallback BPE (Qwen 3.5 published tokenizer)",
         vocabSize: "248,320",
         vocabMap: qwenMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
         contextWindow: 262144,
+        exact: true,
+        tiktokenData: "qwen35",
         costPer1M: { input: 0.20, output: 0.60 }
       },
       "qwen-3-coder": {
         name: "Alibaba Qwen3 / Qwen3-Coder / Qwen3-Max (legacy)",
-        family: "Byte-Fallback BPE",
+        family: "Byte-Fallback BPE (Qwen3 published tokenizer)",
         vocabSize: "151,646",
         vocabMap: qwenMap,
         spaceChar: "Ġ",
         regex: bpeRegex,
         contextWindow: 262144,
+        exact: true,
+        tiktokenData: "qwen3",
         costPer1M: { input: 0.20, output: 0.60 }
       },
       "glm-5": {
@@ -326,10 +332,12 @@ window.TOKENIZER_VOCABS = (() => {
       },
       "cohere-command-a": {
         name: "Cohere Command A+ / Command A",
-        family: "Byte-Pair Encoding (published tokenizer file)",
+        family: "Byte-Pair Encoding (official published tokenizer)",
         vocabSize: "255,000",
         vocabMap: cohereMap,
         contextWindow: 256000,
+        exact: true,
+        tiktokenData: "cohere",
         spaceChar: "Ġ",
         regex: bpeRegex,
         costPer1M: { input: 2.00, output: 8.00 }

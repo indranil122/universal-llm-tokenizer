@@ -44,12 +44,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabCompare = document.getElementById("tabCompare");
   const tabStepBPE = document.getElementById("tabStepBPE");
   const tabBattle = document.getElementById("tabBattle");
+  const tabGuess = document.getElementById("tabGuess");
   const tabLearn = document.getElementById("tabLearn");
 
   const playgroundView = document.getElementById("playgroundView");
   const bpeStepView = document.getElementById("bpeStepView");
   const battleView = document.getElementById("battleView");
   const learnView = document.getElementById("learnView");
+  const guessView = document.getElementById("guessView");
   const battleTableWrap = document.getElementById("battleTableWrap");
   const viewToggle = document.getElementById("viewToggle");
 
@@ -106,7 +108,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!dataLoaded(activeModelKey)) {
         currentTokens = [];
         const cfg = configFor(activeModelKey);
-        const sizes = { o200k_base: "3.6", cl100k_base: "1.5", p50k_base: "0.7", llama3: "4.2" };
+        const sizes = { o200k_base: "3.6", o200k_harmony: "3.7", cl100k_base: "1.5", p50k_base: "0.7", llama3: "4.2", qwen3: "5.2", qwen35: "9.7", cohere: "9.0" };
         tokensDisplayBox.innerHTML =
           `<div class="loading-hint">⏳ Loading exact tokenizer data (<code>${cfg.tiktokenData}</code>, ` +
           `~${sizes[cfg.tiktokenData] || "1"} MB) — one-time download…</div>`;
@@ -614,11 +616,147 @@ document.addEventListener("DOMContentLoaded", () => {
   tabCompare.addEventListener("click", () => switchTab("compare"));
   tabStepBPE.addEventListener("click", () => switchTab("bpe"));
   tabBattle.addEventListener("click", () => switchTab("battle"));
+  tabGuess.addEventListener("click", () => switchTab("guess"));
   tabLearn.addEventListener("click", () => switchTab("learn"));
 
-  function switchTab(tabName) {
-    [tabPlayground, tabCompare, tabStepBPE, tabBattle, tabLearn].forEach(btn => btn.classList.remove("active"));
-    [playgroundView, bpeStepView, battleView, learnView].forEach(view => view.classList.add("hidden"));
+  // ==========================================
+  // ASCII / Hex Artwork — "TOKENS" drawn with its own UTF-8 codes
+  // ==========================================
+  const HEX_FONT = {
+    T: "54", O: "4F", K: "4B", E: "45", N: "4E", S: "53",
+    glyphs: {
+      T: ["#####", "..#..", "..#..", "..#..", "..#..", "..#..", "..#.."],
+      O: [".###.", "#...#", "#...#", "#...#", "#...#", "#...#", ".###."],
+      K: ["#...#", "#..#.", "#.#..", "##...", "#.#..", "#..#.", "#...#"],
+      E: ["#####", "#....", "#....", "####.", "#....", "#....", "#####"],
+      N: ["#...#", "##..#", "##..#", "#.#.#", "#..##", "#..##", "#...#"],
+      S: [".####", "#....", "#....", ".###.", "....#", "....#", "####."]
+    }
+  };
+  const asciiArtEl = document.getElementById("asciiArt");
+
+  function renderAsciiArt() {
+    const word = "TOKENS";
+    const lines = [];
+    for (let row = 0; row < 7; row++) {
+      let line = "";
+      for (let li = 0; li < word.length; li++) {
+        const ch = word[li];
+        const glyph = HEX_FONT.glyphs[ch];
+        if (li > 0) line += "  ";
+        for (let c = 0; c < 5; c++) {
+          line += glyph[row][c] === "#" ? HEX_FONT[ch] : "\u00B7\u00B7";
+          if (c < 4) line += " ";
+        }
+      }
+      lines.push(line);
+    }
+    return lines.join("\n");
+  }
+
+  function paintAsciiRow() {
+    // wrap each row so CSS can light a slow moving scanline
+    const band = Math.floor(Date.now() / 900) % 7;
+    asciiArtEl.innerHTML = escapeHtml(renderAsciiArt()).split("\n")
+      .map((row, i) => `<span class="aa-row${i === band ? " aa-lit" : ""}">${row}</span>`)
+      .join("\n");
+  }
+
+  if (asciiArtEl) {
+    paintAsciiRow();
+    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!reduceMotion) {
+      setInterval(() => { if (!document.hidden) paintAsciiRow(); }, 900);
+    }
+
+    // companion hex dump of the product name — real UTF-8 bytes
+    const dumpEl = document.getElementById("asciiDump");
+    const dumpBytes = Array.from(new TextEncoder().encode("UNIVERSAL LLM TOKENIZER"));
+    dumpEl.textContent = dumpBytes.map(b => b.toString(16).toUpperCase().padStart(2, "0")).join(" ");
+  }
+
+  // ==========================================
+  // Router — History API with real path segments
+  //   /playground  /compare  /bpe  /battle  /guess  /learn
+  // Pretty URLs resolve on GitHub Pages via the root 404.html fallback;
+  // `?tab=` query params work everywhere else (local servers, file hosts).
+  // ==========================================
+  const ROUTES = {
+    playground: "playground",
+    compare: "compare",
+    bpe: "bpe",
+    battle: "battle",
+    guess: "guess",
+    learn: "learn"
+  };
+  const ROUTE_TO_TAB = Object.fromEntries(Object.entries(ROUTES).map(([tab, seg]) => [seg, tab]));
+  const BASE_PATH = (function () {
+    // Project pages live at "/<repo>/app.html" on GitHub Pages; "/" locally.
+    const p = location.pathname;
+    if (/\/app\.html$/.test(p)) return p.slice(0, -"app.html".length);
+    return p.endsWith("/") ? p : p + "/";
+  })();
+
+  function routeFromLocation() {
+    // Priority: ?d= permalink payload > ?tab= > pretty pathname > legacy hashes
+    const params = new URLSearchParams(location.search);
+    if (params.get("tab") && ROUTE_TO_TAB[params.get("tab")]) return { tab: ROUTE_TO_TAB[params.get("tab")] };
+    if (params.get("d")) return { tab: "playground", payload: params.get("d"), push: false, replace: true };
+
+    const seg = location.pathname.slice(BASE_PATH.length).replace(/\/+$/, "");
+    if (seg && ROUTE_TO_TAB[seg] && !/\.html?$/.test(seg)) return { tab: ROUTE_TO_TAB[seg] };
+
+    const h = location.hash || "";
+    if (h === "#learn") return { tab: "learn", replace: true };
+    if (h.startsWith("#d=")) return { tab: "playground", payload: h.slice(3), replace: true };
+    return null;
+  }
+
+  function applyPayload(payload) {
+    try {
+      const state = JSON.parse(b64uDecode(payload));
+      if (typeof state.t === "string" && modelConfigs[state.m]) {
+        promptInput.value = state.t;
+        activeModelKey = state.m;
+        modelSelect.value = state.m;
+        activeTokenizer = null;
+        if (state.c && modelConfigs[state.c]) {
+          compareModelKey = state.c;
+          compareModelSelect.value = state.c;
+          compareTokenizer = null;
+          return true; // needs compare view
+        }
+      }
+    } catch (e) { /* malformed payload — ignore */ }
+    return false;
+  }
+
+  function navigate(tabName, opts) {
+    const options = opts || {};
+    switchTabInternal(tabName);
+    if (!options.silent) {
+      const url = BASE_PATH + ROUTES[tabName] + location.search.replace(/^\?/, "") ;
+      const cleanUrl = BASE_PATH + ROUTES[tabName];
+      if (options.replace) history.replaceState({ tab: tabName }, "", cleanUrl);
+      else history.pushState({ tab: tabName }, "", cleanUrl);
+    }
+  }
+
+  window.addEventListener("popstate", () => {
+    const r = routeFromLocation();
+    if (r) {
+      const useCompare = r.payload ? applyPayload(r.payload) : false;
+      switchTabInternal(useCompare ? "compare" : r.tab);
+    }
+  });
+
+  function switchTab(tabName, opts) {
+    navigate(tabName, opts);
+  }
+
+  function switchTabInternal(tabName) {
+    [tabPlayground, tabCompare, tabStepBPE, tabBattle, tabGuess, tabLearn].forEach(btn => btn.classList.remove("active"));
+    [playgroundView, bpeStepView, battleView, learnView, guessView].forEach(view => view.classList.add("hidden"));
 
     if (tabName === "playground") {
       tabPlayground.classList.add("active");
@@ -636,6 +774,11 @@ document.addEventListener("DOMContentLoaded", () => {
       battleView.classList.remove("hidden");
       renderBattle();
       return;
+    } else if (tabName === "guess") {
+      tabGuess.classList.add("active");
+      guessView.classList.remove("hidden");
+      initGuessGame();
+      return;
     } else if (tabName === "learn") {
       tabLearn.classList.add("active");
       learnView.classList.remove("hidden");
@@ -644,8 +787,40 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTokenization();
   }
 
-  // Deep-link support: app.html#learn opens the Learn Academy directly
-  if (window.location.hash === "#learn") switchTab("learn");
+  // Initial route resolution:
+  //   1. sessionStorage hand-off from the 404.html fallback (pretty deep links)
+  //   2. ?d= permalink payloads / ?tab= params
+  //   3. pretty pathname segments (/learn, /battle, ...)
+  //   4. legacy #learn / #d= hashes (kept for old shared links)
+  (function initRoute() {
+    let r = null;
+    const stored = sessionStorage.getItem("tokenizer-route");
+    if (stored) {
+      sessionStorage.removeItem("tokenizer-route");
+      if (ROUTE_TO_TAB[stored]) r = { tab: ROUTE_TO_TAB[stored] };
+    }
+    if (!r) r = routeFromLocation();
+    if (!r) return;
+    const useCompare = r.payload ? applyPayload(r.payload) : false;
+    switchTabInternal(useCompare ? "compare" : r.tab);
+    history.replaceState({ tab: r.tab }, "", BASE_PATH + ROUTES[useCompare ? "compare" : r.tab]);
+  })();
+
+  // UTF-8-safe base64url helpers for share permalinks
+  function b64uEncode(str) {
+    const bytes = new TextEncoder().encode(str);
+    let bin = "";
+    bytes.forEach(b => { bin += String.fromCharCode(b); });
+    return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  }
+  function b64uDecode(s) {
+    s = s.replace(/-/g, "+").replace(/_/g, "/");
+    while (s.length % 4) s += "=";
+    const bin = atob(s);
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
 
   // Learn Academy: inline YouTube player (facade pattern — the iframe is only
   // injected on first click, so the page loads with zero third-party JS)
@@ -689,6 +864,488 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
+
+  // ==========================================
+  // Share Permalink + Copy-as-Code + JSON/CSV Export
+  // ==========================================
+  function copyToClipboard(text, done) {
+    const finish = () => { if (done) done(true); };
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(text).then(finish).catch(() => fallbackCopy(text, done));
+    } else {
+      fallbackCopy(text, done);
+    }
+  }
+  function fallbackCopy(text, done) {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try { document.execCommand("copy"); if (done) done(true); } catch (e) { if (done) done(false); }
+    document.body.removeChild(ta);
+  }
+  function flashBtn(btn, label) {
+    const original = btn.innerHTML;
+    btn.innerHTML = label;
+    setTimeout(() => { btn.innerHTML = original; }, 1400);
+  }
+
+  const btnShareLink = document.getElementById("btnShareLink");
+  btnShareLink.addEventListener("click", () => {
+    const payload = b64uEncode(JSON.stringify({ t: promptInput.value, m: activeModelKey }));
+    const url = location.origin + BASE_PATH + "playground?d=" + payload;
+    history.replaceState({ tab: "playground" }, "", BASE_PATH + "playground?d=" + payload);
+    copyToClipboard(url, ok => flashBtn(btnShareLink, ok ? "[ &#10003; COPIED! ]" : "[ COPY FAILED ]"));
+  });
+
+  const btnCopyPy = document.getElementById("btnCopyPy");
+  btnCopyPy.addEventListener("click", () => {
+    const cfg = configFor(activeModelKey);
+    const ids = currentTokens.map(t => t.id);
+    let py;
+    if (cfg.exact && cfg.tiktokenData) {
+      py = `import tiktoken\n\nenc = tiktoken.get_encoding("${cfg.tiktokenData}")\nids = enc.encode(${JSON.stringify(promptInput.value)})\nprint(len(ids), ids)\n# -> ${JSON.stringify(ids)}`;
+    } else {
+      py = `# NOTE: ${cfg.name} does not publish its tokenizer file.\n# These IDs are this tool's approximation — treat counts, not exact IDs, as reliable.\nids = ${JSON.stringify(ids)}\ntext = ${JSON.stringify(promptInput.value)}\nprint(len(ids))`;
+    }
+    copyToClipboard(py, ok => flashBtn(btnCopyPy, ok ? "[ &#10003; COPIED! ]" : "[ COPY FAILED ]"));
+  });
+
+  function downloadFile(filename, content, mime) {
+    const blob = new Blob([content], { type: mime });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  }
+
+  document.getElementById("btnExportJson").addEventListener("click", () => {
+    const data = {
+      model: configFor(activeModelKey).name,
+      modelKey: activeModelKey,
+      exact: !!configFor(activeModelKey).exact,
+      text: promptInput.value,
+      tokenCount: currentTokens.length,
+      tokens: currentTokens.map((t, i) => ({
+        i, id: t.id, text: t.text, bytes: t.bytes,
+        hex: (t.hexBytes || []).join(" "),
+        start: t.start, end: t.end, type: t.type
+      }))
+    };
+    downloadFile(`tokens-${activeModelKey}.json`, JSON.stringify(data, null, 2), "application/json");
+  });
+
+  document.getElementById("btnExportCsv").addEventListener("click", () => {
+    const esc = v => `"${String(v).replace(/"/g, '""')}"`;
+    let csv = "i,text,id,hex_bytes,start,end,type\n";
+    currentTokens.forEach((t, i) => {
+      csv += [i, esc(t.text), t.id, esc((t.hexBytes || []).join(" ")), t.start, t.end, esc(t.type)].join(",") + "\n";
+    });
+    downloadFile(`tokens-${activeModelKey}.csv`, csv, "text/csv");
+  });
+
+  // ==========================================
+  // Cost Lab: Drag & Drop File Analyzer
+  // ==========================================
+  const fileDropZone = document.getElementById("fileDropZone");
+  const fileInput = document.getElementById("fileInput");
+  const fileAnalysisWrap = document.getElementById("fileAnalysisWrap");
+
+  function analyzeTextFile(name, text) {
+    if (!text || !text.length) {
+      fileAnalysisWrap.classList.remove("hidden");
+      fileAnalysisWrap.innerHTML = `<div class="loading-hint">⚠ THAT FILE LOOKS EMPTY OR IS NOT READABLE TEXT.</div>`;
+      return;
+    }
+    const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+    const lines = text.split(/\r\n|\r|\n/).length;
+    const rows = [];
+    for (const [key, cfg] of Object.entries(modelConfigs)) {
+      // Only run exact engines whose vocab is already loaded — never force big downloads here
+      if (cfg.exact && !(window.TIKTOKEN_DATA && window.TIKTOKEN_DATA[cfg.tiktokenData])) {
+        rows.push({ key, cfg, count: null });
+        continue;
+      }
+      let count = null;
+      try { count = createTokenizer(key).tokenize(text).length; } catch (e) { count = null; }
+      rows.push({ key, cfg, count });
+    }
+    rows.sort((a, b) => (a.count ?? Infinity) - (b.count ?? Infinity));
+    const loaded = rows.filter(r => r.count !== null);
+
+    let html = `<div class="battle-note">
+      <strong>${escapeHtml(name)}</strong> — ${(text.length / 1024).toFixed(1)} KB ·
+      ${words.toLocaleString()} words · ${lines.toLocaleString()} lines ·
+      analyzed locally across ${loaded.length} loaded models.
+      <button id="fdUseInPlayground" class="preset-btn">[ USE THIS TEXT IN PLAYGROUND ]</button>
+    </div><table class="battle-table"><thead><tr>
+      <th>#</th><th>Model</th><th>Tokens</th><th>Chars/Token</th><th>Est. Cost (input)</th><th>Context Used</th>
+    </tr></thead><tbody>`;
+    rows.forEach((r, i) => {
+      if (r.count === null) {
+        html += `<tr><td>—</td><td>${r.cfg.name}</td><td class="battle-mono" colspan="4">exact vocab not loaded — pick it in the playground once to enable</td></tr>`;
+        return;
+      }
+      const cpt = r.count ? (text.length / r.count).toFixed(2) : "—";
+      const cost = r.cfg.costPer1M ? ((r.count / 1000000) * r.cfg.costPer1M.input).toFixed(4) : "—";
+      const pct = r.cfg.contextWindow ? ((r.count / r.cfg.contextWindow) * 100).toFixed(2) + "%" : "—";
+      html += `<tr><td>${i + 1}${i === 0 && rows[0].count ? " 🏆" : ""}</td>
+        <td>${r.cfg.name}</td>
+        <td class="battle-mono battle-strong">${r.count.toLocaleString()}</td>
+        <td class="battle-mono">${cpt}</td>
+        <td class="battle-mono">$${cost}</td>
+        <td class="battle-mono">${pct}</td></tr>`;
+    });
+    html += `</tbody></table>`;
+    fileAnalysisWrap.innerHTML = html;
+    fileAnalysisWrap.classList.remove("hidden");
+    document.getElementById("fdUseInPlayground").addEventListener("click", () => {
+      promptInput.value = text;
+      switchTab("playground");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  function handleFile(file) {
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      fileAnalysisWrap.classList.remove("hidden");
+      fileAnalysisWrap.innerHTML = `<div class="loading-hint">⚠ FILE TOO LARGE (${(file.size / 1048576).toFixed(1)} MB). KEEP IT UNDER 2 MB FOR LIVE ANALYSIS.</div>`;
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = () => analyzeTextFile(file.name, String(reader.result));
+    reader.onerror = () => {
+      fileAnalysisWrap.classList.remove("hidden");
+      fileAnalysisWrap.innerHTML = `<div class="loading-hint">⚠ COULD NOT READ THAT FILE. TRY A PLAIN-TEXT FORMAT.</div>`;
+    };
+    reader.readAsText(file);
+  }
+
+  fileDropZone.addEventListener("dragover", e => { e.preventDefault(); fileDropZone.classList.add("dragging"); });
+  fileDropZone.addEventListener("dragleave", () => fileDropZone.classList.remove("dragging"));
+  fileDropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    fileDropZone.classList.remove("dragging");
+    handleFile(e.dataTransfer.files && e.dataTransfer.files[0]);
+  });
+  fileDropZone.addEventListener("click", () => fileInput.click());
+  fileDropZone.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileInput.click(); } });
+  fileInput.addEventListener("change", () => handleFile(fileInput.files && fileInput.files[0]));
+
+  // ==========================================
+  // Guess-the-Tokens Game
+  // ==========================================
+  const GUESS_MODEL = "gpt-5-6";
+  const GUESS_PHRASES = [
+    "Hello World!", "tokenizer", "Artificial Intelligence", "नमस्ते दुनिया",
+    "こんにちは世界", "🤖🚀", "👨‍👩‍👧‍👦", "1234567890",
+    "def main():", "import numpy as np", "The quick brown fox jumps over the lazy dog",
+    "SolidGoldMagikarp", "strawberry", "supercalifragilisticexpialidocious",
+    "<|endoftext|>", "print('hello world')", "€100 costs €120 in 2026",
+    "naïve café résumé", "مرحبا بالعالم", "안녕하세요", "LLMs read tokens not words",
+    "x = x + 1", "{json: true}", "https://example.com/path?q=1"
+  ];
+  let gDeck = [];
+  let gPtr = 0;
+  let gAnswer = 0;
+  let gState = { round: 0, score: 0, streak: 0, best: parseInt(localStorage.getItem("guess-best") || "0", 10) };
+  let guessInitialized = false;
+
+  const gRound = document.getElementById("gRound");
+  const gScore = document.getElementById("gScore");
+  const gStreak = document.getElementById("gStreak");
+  const gBest = document.getElementById("gBest");
+  const gPhrase = document.getElementById("gPhrase");
+  const gInput = document.getElementById("gInput");
+  const gFeedback = document.getElementById("gFeedback");
+  const btnGuessSubmit = document.getElementById("btnGuessSubmit");
+  const btnGuessNext = document.getElementById("btnGuessNext");
+
+  function nextFromDeck() {
+    if (gPtr >= gDeck.length) {
+      gDeck = GUESS_PHRASES.slice().sort(() => Math.random() - 0.5);
+      gPtr = 0;
+    }
+    return gDeck[gPtr++];
+  }
+
+  async function startGuessRound() {
+    await ensureLoaded(GUESS_MODEL);
+    const phrase = nextFromDeck();
+    gAnswer = createTokenizer(GUESS_MODEL).tokenize(phrase).length;
+    gPhrase.textContent = phrase;
+    gInput.value = "";
+    gFeedback.classList.add("hidden");
+    gFeedback.innerHTML = "";
+    btnGuessSubmit.classList.remove("hidden");
+    btnGuessNext.classList.add("hidden");
+    gRound.textContent = gState.round;
+    gScore.textContent = gState.score;
+    gStreak.textContent = gState.streak;
+    gBest.textContent = gState.best;
+  }
+
+  function initGuessGame() {
+    if (guessInitialized) return;
+    guessInitialized = true;
+    startGuessRound();
+  }
+
+  btnGuessSubmit.addEventListener("click", () => {
+    const guess = parseInt(gInput.value, 10);
+    if (isNaN(guess) || guess < 0) return;
+    gState.round++;
+    const correct = guess === gAnswer;
+    const tokens = createTokenizer(GUESS_MODEL).tokenize(gPhrase.textContent);
+    if (correct) {
+      gState.score++;
+      gState.streak++;
+      if (gState.streak > gState.best) {
+        gState.best = gState.streak;
+        localStorage.setItem("guess-best", String(gState.best));
+      }
+    } else {
+      gState.streak = 0;
+    }
+    gScore.textContent = gState.score;
+    gStreak.textContent = gState.streak;
+    gBest.textContent = gState.best;
+
+    const delta = guess - gAnswer;
+    gFeedback.innerHTML = `
+      <div class="gf-verdict ${correct ? "gf-ok" : "gf-no"}">
+        ${correct ? "&#10003; EXACT! YOU THINK IN TOKENS NOW." : `&#10007; OFF BY ${Math.abs(delta)} — YOU GUESSED ${guess > gAnswer ? "HIGH" : "LOW"}.`}
+      </div>
+      <p class="gf-line">ACTUAL TOKEN COUNT: <b>${gAnswer}</b></p>
+      <div class="tokens-display-box gf-tokens"></div>`;
+    renderTokenPills(gFeedback.querySelector(".gf-tokens"), tokens.slice(0, 60));
+    gFeedback.classList.remove("hidden");
+    btnGuessSubmit.classList.add("hidden");
+    btnGuessNext.classList.remove("hidden");
+    gInput.blur();
+  });
+  gInput.addEventListener("keydown", e => { if (e.key === "Enter") btnGuessSubmit.click(); });
+  btnGuessNext.addEventListener("click", startGuessRound);
+
+  // ==========================================
+  // Quirks Museum — load exhibits into the playground
+  // ==========================================
+  const MUSEUM_EXHIBITS = {
+    "strawberry": { m: "gpt-5-6", t: "How many r's are in strawberry? Really count them carefully." },
+    "trailing-space": { m: "gpt-4", t: "Here is a tagline for an ice cream shop: " },
+    "magikarp": { m: "gpt-3", t: "SolidGoldMagikarp SolidGoldMagikarp petertoddd StreamGraph" },
+    "nonenglish": { m: "gpt-5-6", t: "Hello World! नमस्ते दुनिया! こんにちは世界! مرحبا بالعالم" },
+    "numbers": { m: "gpt-5-6", t: "pi = 3.14159265358979, count = 1234567890, huge = 9876543210123456789" },
+    "zwjemoji": { m: "gpt-5-6", t: "Family: 👨‍👩‍👧‍👦 Flag: 🏳️‍🌈 Rocket: 🚀" }
+  };
+  document.querySelectorAll(".museum-card").forEach(card => {
+    const btn = card.querySelector(".museum-load");
+    if (!btn) return;
+    btn.addEventListener("click", () => {
+      const ex = MUSEUM_EXHIBITS[card.getAttribute("data-exhibit")];
+      if (!ex || !modelConfigs[ex.m]) return;
+      promptInput.value = ex.t;
+      activeModelKey = ex.m;
+      modelSelect.value = ex.m;
+      activeTokenizer = null;
+      switchTab("playground");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  });
+
+  // ==========================================
+  // Laboratory: Train Your Own BPE Tokenizer (minbpe-style, in JS)
+  // ==========================================
+  let trainedBpe = null;
+
+  function bytesToDisplay(byteArr) {
+    try {
+      return new TextDecoder("utf-8", { fatal: false }).decode(new Uint8Array(byteArr))
+        .replace(/\n/g, "\\n").replace(/\t/g, "\\t").replace(/ /g, "\u00B7");
+    } catch (e) { return "?"; }
+  }
+
+  function trainBpe(rawCorpus, numMerges) {
+    const corpus = rawCorpus.slice(0, 6000);
+    let seq = Array.from(new TextEncoder().encode(corpus));
+    const merges = [];
+    let nextId = 256;
+    for (let step = 0; step < numMerges; step++) {
+      const counts = new Map();
+      for (let j = 0; j < seq.length - 1; j++) {
+        const k = seq[j] + "," + seq[j + 1];
+        counts.set(k, (counts.get(k) || 0) + 1);
+      }
+      let bestK = null, bestC = 1;
+      for (const [k, c] of counts) { if (c > bestC) { bestC = c; bestK = k; } }
+      if (bestK === null) break;
+      const parts = bestK.split(",");
+      const a = Number(parts[0]), b = Number(parts[1]);
+      const out = [];
+      for (let j = 0; j < seq.length; j++) {
+        if (j < seq.length - 1 && seq[j] === a && seq[j + 1] === b) { out.push(nextId); j++; }
+        else out.push(seq[j]);
+      }
+      seq = out;
+      merges.push({ a, b, id: nextId, count: bestC });
+      nextId++;
+    }
+    const vocab = new Map();
+    for (let i = 0; i < 256; i++) vocab.set(i, [i]);
+    for (const mg of merges) {
+      const left = vocab.get(mg.a) || [];
+      const right = vocab.get(mg.b) || [];
+      vocab.set(mg.id, left.concat(right));
+    }
+    return { merges, seq, vocab };
+  }
+
+  function encodeWithMerges(merges, text) {
+    let seq = Array.from(new TextEncoder().encode(text));
+    for (const mg of merges) {
+      const out = [];
+      for (let j = 0; j < seq.length; j++) {
+        if (j < seq.length - 1 && seq[j] === mg.a && seq[j + 1] === mg.b) { out.push(mg.id); j++; }
+        else out.push(seq[j]);
+      }
+      seq = out;
+    }
+    return seq;
+  }
+
+  const trainCorpusEl = document.getElementById("trainCorpus");
+  const trainMergesEl = document.getElementById("trainMerges");
+  const btnTrainBPE = document.getElementById("btnTrainBPE");
+  const trainStatus = document.getElementById("trainStatus");
+  const trainBPEOutput = document.getElementById("trainBPEOutput");
+
+  btnTrainBPE.addEventListener("click", () => {
+    const numMerges = Math.min(200, Math.max(1, parseInt(trainMergesEl.value, 10) || 24));
+    if (!trainCorpusEl.value.trim()) {
+      trainStatus.textContent = "FEED ME SOME TEXT FIRST.";
+      return;
+    }
+    trainStatus.textContent = "TRAINING…";
+    setTimeout(() => {
+      const result = trainBpe(trainCorpusEl.value, numMerges);
+      trainedBpe = result;
+      const rawLen = Array.from(new TextEncoder().encode(trainCorpusEl.value.slice(0, 6000))).length;
+      const afterLen = result.seq.length;
+      let html = `<div class="battle-note">TRAINED ON ${(rawLen / 1024).toFixed(1)} KB OF BYTES —
+        LEARNED <b>${result.merges.length}</b> MERGES.
+        COMPRESSION: ${rawLen} BYTES &rarr; ${afterLen} TOKENS (${(rawLen / afterLen).toFixed(2)} BYTES/TOKEN).
+        SCROLL TO WATCH VOCABULARY EMERGE FROM RAW BYTES:</div>`;
+      html += `<div class="bpe-step-container">`;
+      result.merges.forEach((mg, idx) => {
+        const dispA = mg.a < 256 ? bytesToDisplay([mg.a]) : bytesToDisplay(result.vocab.get(mg.a));
+        const dispB = mg.b < 256 ? bytesToDisplay([mg.b]) : bytesToDisplay(result.vocab.get(mg.b));
+        const dispNew = bytesToDisplay(result.vocab.get(mg.id));
+        html += `<div class="bpe-step-card">
+          <h4 class="bpe-step-header">MERGE #${idx + 1} — PAIR [${escapeHtml(dispA)}] + [${escapeHtml(dispB)}]</h4>
+          <p class="train-merge-meta">SEEN <b>${mg.count}×</b> IN THE CORPUS &nbsp;&rarr;&nbsp; NEW TOKEN ID <b>${mg.id}</b> = "${escapeHtml(dispNew)}"</p>
+        </div>`;
+      });
+      html += `</div>`;
+      trainBPEOutput.innerHTML = html;
+      trainBPEOutput.classList.remove("hidden");
+      const compression = rawLen ? (rawLen / afterLen).toFixed(2) : "0";
+      trainStatus.textContent = `DONE — ${result.merges.length} MERGES · ${compression} BYTES/TOKEN`;
+    }, 30);
+  });
+
+  const encodeSampleEl = document.getElementById("encodeSample");
+  const encodeSampleResult = document.getElementById("encodeSampleResult");
+  document.getElementById("btnEncodeSample").addEventListener("click", () => {
+    if (!trainedBpe || !trainedBpe.merges.length) {
+      trainStatus.textContent = "TRAIN A TOKENIZER FIRST.";
+      return;
+    }
+    const ids = encodeWithMerges(trainedBpe.merges, encodeSampleEl.value || "");
+    encodeSampleResult.innerHTML = "";
+    ids.forEach(id => {
+      const pill = document.createElement("span");
+      pill.className = "token-pill";
+      pill.dataset.color = id % 6;
+      const display = trainedBpe.vocab.has(id) ? bytesToDisplay(trainedBpe.vocab.get(id)) : "?" + id;
+      pill.innerHTML = `<span>${escapeHtml(display)}</span><span class="token-id-badge">${id}</span>`;
+      encodeSampleResult.appendChild(pill);
+    });
+    encodeSampleResult.classList.remove("hidden");
+  });
+
+  // ==========================================
+  // First-Visit Guided Tour
+  // ==========================================
+  const TOUR_KEY = "tokenizer-tour-v1";
+  const TOUR_STEPS = [
+    { sel: "#promptInput", title: "PROMPT EDITOR", body: "Type or paste anything — code, Hindi, emoji, secrets. Every keystroke re-tokenizes instantly, right here in your browser." },
+    { sel: "#tokensDisplayBox", title: "LIVE TOKEN PILLS", body: "Each pill is one token with its exact ID. Hover any pill for UTF-8 bytes, hex and character range." },
+    { sel: "#modelSelect", title: "24 MODELS, ONE DROPDOWN", body: "Switch between GPT-5.6, Claude, Gemini, Llama, Kimi and more. Models marked EXACT use byte-identical official vocabularies." },
+    { sel: ".export-bar", title: "SHARE & EXPORT", body: "Copy a permalink to this exact tokenization, grab a ready-to-run Python snippet, or export every token as JSON/CSV." },
+    { sel: "#tabLearn", title: "LEARN ACADEMY", body: "Karpathy & 3Blue1Brown courses that play inside the app, plus the Quirks Museum of famous tokenizer glitches." }
+  ];
+  let tourIdx = 0;
+  const tourOverlay = document.getElementById("tourOverlay");
+  const tourCard = document.getElementById("tourCard");
+  const tourStepTag = document.getElementById("tourStepTag");
+  const tourTitle = document.getElementById("tourTitle");
+  const tourBody = document.getElementById("tourBody");
+  const tourProgress = document.getElementById("tourProgress");
+
+  function showTourStep() {
+    const step = TOUR_STEPS[tourIdx];
+    const target = document.querySelector(step.sel);
+    document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
+    if (target) {
+      target.scrollIntoView({ block: "center", behavior: "smooth" });
+      target.classList.add("tour-highlight");
+      const rect = target.getBoundingClientRect();
+      requestAnimationFrame(() => positionTourCard(rect));
+    } else {
+      positionTourCard(null);
+    }
+    tourStepTag.textContent = `TOUR // STEP ${tourIdx + 1}`;
+    tourTitle.textContent = step.title;
+    tourBody.textContent = step.body;
+    tourProgress.textContent = `${tourIdx + 1} / ${TOUR_STEPS.length}`;
+  }
+
+  function positionTourCard(rect) {
+    const cardW = Math.min(360, window.innerWidth - 24);
+    tourCard.style.width = cardW + "px";
+    let x = rect ? rect.left + rect.width / 2 - cardW / 2 : window.innerWidth / 2 - cardW / 2;
+    let y = rect ? rect.bottom + 14 : window.innerHeight / 2 - 80;
+    x = Math.max(12, Math.min(x, window.innerWidth - cardW - 12));
+    y = Math.max(12, Math.min(y, window.innerHeight - tourCard.offsetHeight - 12));
+    tourCard.style.left = x + "px";
+    tourCard.style.top = y + "px";
+  }
+
+  function endTour() {
+    tourOverlay.classList.add("hidden");
+    document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
+    localStorage.setItem(TOUR_KEY, "done");
+  }
+
+  function startTour() {
+    tourIdx = 0;
+    tourOverlay.classList.remove("hidden");
+    showTourStep();
+  }
+
+  document.getElementById("tourNext").addEventListener("click", () => {
+    tourIdx++;
+    if (tourIdx >= TOUR_STEPS.length) endTour();
+    else showTourStep();
+  });
+  document.getElementById("tourSkip").addEventListener("click", endTour);
+  document.getElementById("btnTour").addEventListener("click", startTour);
+  if (!localStorage.getItem(TOUR_KEY)) setTimeout(startTour, 900);
 
   // Initial Run
   activeTokenizer = null;

@@ -59,17 +59,22 @@ Open the [live demo](https://indranil122.github.io/universal-llm-tokenizer/) and
 
 - ⚡ **Real-time tokenization** — every keystroke instantly re-tokenizes your prompt
 - 🧩 **Color-coded token pills** with **exact token IDs** (hover for UTF-8 bytes, hex, character ranges)
-- 🎯 **EXACT tokenization** — GPT-5.x, GPT-4o, GPT-4.1, GPT-4, GPT-3 & Llama ship the **real vocabularies** (byte-identical to official tiktoken — verified by the test suite)
+- 🎯 **EXACT tokenization** — **11 byte-exact vocabularies embedded**: GPT-5.x / GPT-4o / GPT-4.1 / GPT-4 / GPT-3, gpt-oss (`o200k_harmony`), Llama, **Qwen3 + Qwen3.5**, and **Cohere Command A+** (official published file)
 - ⚔️ **All-models battle table** — run one prompt through all 24 models, ranked by token count, cost & context usage
+- 🎮 **Guess-the-Tokens game** — train your token intuition against GPT-5.6 with streaks and a saved best score
+- 🏛️ **Quirks Museum** — one-click exhibits for the strawberry problem, the trailing-space trap, SolidGoldMagikarp, the non-English tax, number slicing and ZWJ emoji
+- 🧪 **Train-your-own BPE lab** — paste a corpus and watch a tokenizer vocabulary emerge from raw bytes, minbpe-style, live in your browser
+- 💸 **Cost Lab** — drag & drop any text file and see what all 24 models would charge for it, ranked
+- 🔗 **Shareable permalinks** — one click copies a URL that reopens your exact prompt + model
+- 🐍 **Copy-as-code** — grab a ready-to-run Python `tiktoken` snippet or export every token as JSON/CSV
 - 🧾 **Context-window meter** — see exactly what % of each model's window your prompt consumes
 - 🌐 **Script detection** — instantly see which scripts (Devanagari, CJK, Arabic, Emoji…) are inflating your count
 - ▦ **Token bar view** — flip pills into byte-length bars for a screenshot-worthy overview
 - 🔄 **Side-by-side comparison** — watch GPT-5.6 vs Llama 4 vs Gemini 3.1 disagree on the same sentence
 - 📊 **Word ➜ Token matrix** — which words explode into multiple tokens?
-- 💰 **Live cost estimator** — what will this prompt cost on every model?
 - ⏯️ **Step-by-step BPE engine** — watch raw characters literally *merge* into subwords
 - 🖱️ **Hover-sync highlighting** — hover a pill and watch it light up inside your text
-- 🎓 **Built-in LEARN Academy** — curated Karpathy & 3Blue1Brown courses, right inside the app (`app.html#learn`)
+- 🎓 **Built-in LEARN Academy** — Karpathy & 3Blue1Brown courses that play *inside* the app (`app.html#learn`)
 - 🌗 **Dark/light brutalist UI** — zero frameworks, instant load
 
 ---
@@ -82,7 +87,7 @@ The lineup tracks the **models that are actually live right now** (August 2026),
 |---|---|---|---|---|
 | OpenAI **GPT-5.6 Sol / Terra / Luna** | ✅ Exact BPE (`o200k_base`) | 200,000 | 400k | 🟢 Current |
 | OpenAI **GPT-5** family | ✅ Exact BPE (`o200k_base`) | 200,000 | 400k | 🟢 Current |
-| OpenAI **gpt-oss-120b / 20b** (open weights) | BPE (`o200k_harmony`)* | 201,088 | 128k | 🟢 Current |
+| OpenAI **gpt-oss-120b / 20b** (open weights) | ✅ Exact BPE (`o200k_harmony`) — full 1,090-token harmony special block | 201,088 | 128k | 🟢 Current |
 | OpenAI GPT-4.1 | ✅ Exact BPE (`o200k_base`) | 200,000 | 1M | 🟡 Legacy API |
 | OpenAI GPT-4o / GPT-4o-mini | ✅ Exact BPE (`o200k_base`) | 200,000 | 128k | 🟡 Legacy |
 | OpenAI GPT-4 / GPT-3.5 Turbo | ✅ Exact BPE (`cl100k_base`) | 100,000 | 8k | ⚪ Retired |
@@ -96,15 +101,15 @@ The lineup tracks the **models that are actually live right now** (August 2026),
 | Google BERT | WordPiece | 30,522 | 512 | ⚪ Retired |
 | DeepSeek **V4 Pro / Flash** (+ V3.2) | Byte-fallback BPE* | 129,280 | 1M | 🟢 Current |
 | Moonshot **Kimi K3 / K2.5** | Tiktoken BPE* | 163,584 | 1M | 🟢 Current |
-| Alibaba **Qwen 3.5 / 3.6 / 3.8** | Byte-fallback BPE* (~248k, expanded from Qwen3's 151k) | 248,320 | 256k→1M | 🟢 Current |
-| Alibaba Qwen3 / Qwen Coder (legacy) | Byte-fallback BPE* | 151,646 | 256k | 🟡 Legacy |
+| Alibaba **Qwen 3.5 / 3.6 / 3.8** | ✅ Exact byte-fallback BPE (Qwen3.5 published tokenizer) | 248,320 | 256k→1M | 🟢 Current |
+| Alibaba Qwen3 / Qwen Coder (legacy) | ✅ Exact byte-fallback BPE (Qwen3 published tokenizer) | 151,646 | 256k | 🟡 Legacy |
 | Zhipu **GLM-5 / GLM-5.2** | Byte-fallback BPE (`glm5` encoding)* | 154,856 | 1M | 🟢 Current |
 | MiniMax **M2.5 / M2.1 / M2** | Byte-fallback BPE (`minimax_m2` encoding)* | 200,054 | ~200k | 🟢 Current |
 | Mistral Large 3 | Tekken BPE* | 131,072 | 256k | 🟢 Current |
 | xAI **Grok 4 / 4.5 / 4.6** | BPE* (unpublished — community estimate ≈131k, cl100k-like) | ≈131,072 (est.) | 256k–2M by SKU | 🟢 Current |
-| Cohere **Command A+ / Command A** | BPE (published tokenizer file) | 255,000 | 256k | 🟢 Current |
+| Cohere **Command A+ / Command A** | ✅ Exact BPE (official published tokenizer file) | 255,000 | 256k | 🟢 Current |
 
-**24 models · 4 tokenizer engines (real tiktoken, BPE, WordPiece, SentencePiece) · 0 servers**
+**24 models · 4 tokenizer engines · 11 byte-exact vocabularies · 0 servers**
 
 > ✅ **Exact** = the real vocabulary file is embedded and token IDs are byte-identical to the official tokenizer.
 > 🟢 **Current** = actively served by the vendor today. 🟡 = available but deprecated.
@@ -232,7 +237,7 @@ Add a config in <code>tokenizers/vocabularies.js</code>, an <code>&lt;option&gt;
 
 ## 🧪 Verified Accuracy
 
-`npm test` runs a zero-dependency suite with **hardcoded ground-truth token IDs** (each originally verified against the official tiktoken runtime): `"Hello World!"` → `[9906, 4435, 0]` on cl100k, case-insensitive contractions (`"I'M"` → `[40, 28703]`), Devanagari/CJK/emoji round-trips, and a guard that every dropdown model in `app.html` has a real config (so the UI can never silently drift from the model database). `tools/compare_tiktoken.js` can re-verify the whole engine against the official npm package any time.
+`npm test` runs a zero-dependency suite (also enforced by CI on every PR) with **hardcoded ground-truth token IDs** (each originally verified against the official tiktoken runtime): `"Hello World!"` → `[9906, 4435, 0]` on cl100k, case-insensitive contractions (`"I'M"` → `[40, 28703]`), Devanagari/CJK/emoji round-trips, a guard that every dropdown model in `app.html` has a real config (so the UI can never silently drift from the model database), and a guard that every exact encoding still matches its **officially published vocabulary size**. `tools/compare_tiktoken.js` can re-verify the whole engine against the official npm package any time.
 
 ---
 
