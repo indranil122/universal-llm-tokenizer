@@ -1,41 +1,76 @@
 <div align="center">
 
+<img src="social-preview.png" alt="Universal LLM Tokenizer — see how AI models read your text" width="800">
+
 # 🤖 Universal LLM Tokenizer & Visualizer
 
-### *See exactly how AI models "read" your text — in real time*
+### *Paste a prompt. Watch 24 AI models fight over it — token by token.*
 
-**Type a prompt. Watch GPT-5, Llama 4, Claude, Gemini 3, DeepSeek & 15 models split it into subword tokens — live, color-coded, with exact token IDs.**
+**See exactly how GPT-5.6, Claude Fable 5, Gemini 3.1, Llama 4, Kimi K3, DeepSeek V4 & 20 more models slice your text into subword tokens — live, color-coded, with byte-exact token IDs.**
 
 [![Live Demo](https://img.shields.io/badge/%F0%9F%96%A5%EF%B8%8F_Live_Demo-GitHub_Pages-2ea44f?style=for-the-badge)](https://indranil122.github.io/universal-llm-tokenizer/)
-[![Zero Dependencies](https://img.shields.io/badge/Zero%20Dependencies-Vanilla%20JS-f7df1e?style=for-the-badge)]()
-[![No API Keys](https://img.shields.io/badge/No%20API%20Keys-100%25%20Client--side-0a66c2?style=for-the-badge)]()
+[![Zero Dependencies](https://img.shields.io/badge/Zero_Dependencies-Vanilla_JS-f7df1e?style=for-the-badge)]()
+[![No API Keys](https://img.shields.io/badge/No_API_Keys-100%25_Client--side-0a66c2?style=for-the-badge)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=for-the-badge)]()
+[![GitHub Stars](https://img.shields.io/github/stars/indranil122/universal-llm-tokenizer?style=for-the-badge&color=fdb515)](https://github.com/indranil122/universal-llm-tokenizer/stargazers)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-ff69b4.svg?style=for-the-badge)](https://github.com/indranil122/universal-llm-tokenizer/blob/main/README.md#contributing)
 
 **Open-source · Free forever · Works offline · Runs entirely in your browser**
+
+[🚀 Launch the tool](https://indranil122.github.io/universal-llm-tokenizer/) · [🎓 Learn Academy](https://indranil122.github.io/universal-llm-tokenizer/app.html#learn) · [⚔️ Model Battle](https://indranil122.github.io/universal-llm-tokenizer/app.html) · [🤝 Contribute](#contributing)
 
 </div>
 
 ---
 
+## 📑 Contents
+
+[Why tokenization matters](#-why-tokenization-matters) · [Try it in 10 seconds](#-try-it-in-10-seconds) · [Features](#-why-youll-love-it) · [Supported Models](#-supported-models) · [How It Works](#️-how-it-works) · [vs Alternatives](#-how-it-compares) · [FAQ](#-faq) · [Learning Resources](#-learning-resources) · [Contributing](#contributing)
+
+---
+
+## 🔥 Why tokenization matters
+
+Understanding **tokenization** is the #1 hidden skill in the AI world — it decides your **API costs**, your **context limits**, and even your **model's intelligence**:
+
+- 💸 **It's your bill.** Every API call is priced per token. Non-English text can cost **2–10× more** for the same sentence.
+- 📏 **It's your limit.** A "1M context window" counts tokens, not words — and some scripts burn through it fast.
+- 🧠 **It's your quality.** Why can't LLMs count the letters in *strawberry*? Why do they fumble at reversing strings? **Tokenization.** One token = one opaque ID; the model never sees individual letters.
+- 🌍 **It's why AI feels "English-first."** Devanagari, Tamil, CJK, Arabic and emoji all explode into many more tokens than English.
+
+This tool makes all of that **visible**, live, in your browser.
+
+---
+
+## ⚡ Try it in 10 seconds
+
+Open the [live demo](https://indranil122.github.io/universal-llm-tokenizer/) and:
+
+1. Type `Hello World!` → **3 tokens** on GPT-5.6. Clean.
+2. Type `नमस्ते` or `こんにちは` → the same idea becomes **10+ tokens**. *That's* the non-English penalty.
+3. Hit the `[ SYSTEM TAGS ]` preset → meet [`SolidGoldMagikarp`](https://www.lesswrong.com/posts/aPeJE8bSo6rAFoLqg/solidgoldmagikarp-plus-prompt-generation-glitches), the famous glitch token.
+4. Open the `[ ALL MODELS ]` tab → watch all 24 models battle over your text, ranked by tokens & cost.
+
+> 🎬 Then hover any token pill: you get its exact ID, UTF-8 bytes, hex, and character range.
+
+---
+
 ## ✨ Why you'll love it
 
-Understanding **tokenization** is the #1 hidden skill in the AI world — it decides your **costs**, your **context limits**, and even your **model's intelligence**. This tool makes it *visible* for the first time:
-
 - ⚡ **Real-time tokenization** — every keystroke instantly re-tokenizes your prompt
-- 🧩 **Color-coded token pills** with **exact token IDs** (hover for UTF-8 bytes, hex, and character ranges)
-- 🎯 **EXACT tokenization** — GPT-5, GPT-4o, GPT-4, GPT-3 & Llama 4 ship the **real vocabularies** (byte-identical to official tiktoken — verified by the test suite & validation tools)
-- ⚔️ **All-models battle table** — run the same prompt through all 15 models, ranked by token count, cost & context usage
-- 🧾 **Context-window meter** — see exactly what % of each model's context window your prompt consumes
-- 🌐 **Script detection** — instantly see which scripts (Devanagari, CJK, Arabic, Emoji…) are inflating your token count
+- 🧩 **Color-coded token pills** with **exact token IDs** (hover for UTF-8 bytes, hex, character ranges)
+- 🎯 **EXACT tokenization** — GPT-5.x, GPT-4o, GPT-4.1, GPT-4, GPT-3 & Llama ship the **real vocabularies** (byte-identical to official tiktoken — verified by the test suite)
+- ⚔️ **All-models battle table** — run one prompt through all 24 models, ranked by token count, cost & context usage
+- 🧾 **Context-window meter** — see exactly what % of each model's window your prompt consumes
+- 🌐 **Script detection** — instantly see which scripts (Devanagari, CJK, Arabic, Emoji…) are inflating your count
 - ▦ **Token bar view** — flip pills into byte-length bars for a screenshot-worthy overview
-- 🔄 **Side-by-side model comparison** — see GPT-5 vs Llama 4 vs Gemini 3 disagree on the same sentence
-- 📊 **Word ➜ Token breakdown matrix** — which words explode into multiple tokens?
-- 💰 **Live API cost estimator** — how much will this prompt cost on each model?
+- 🔄 **Side-by-side comparison** — watch GPT-5.6 vs Llama 4 vs Gemini 3.1 disagree on the same sentence
+- 📊 **Word ➜ Token matrix** — which words explode into multiple tokens?
+- 💰 **Live cost estimator** — what will this prompt cost on every model?
 - ⏯️ **Step-by-step BPE engine** — watch raw characters literally *merge* into subwords
-- 🌍 **One-click presets** — code, multilingual, emoji, numbers, and system tags (try the famous `SolidGoldMagikarp` glitch!)
-- 🖱️ **Hover-sync highlighting** — hover a token pill and watch it light up inside your text
-
-> 💡 **The "aha" moment:** type `Hello World!` in English, then switch to a Devanagari or Japanese word — and watch one word explode into 10+ tokens. *That's* why AI is bad at non-English languages.
+- 🖱️ **Hover-sync highlighting** — hover a pill and watch it light up inside your text
+- 🎓 **Built-in LEARN Academy** — curated Karpathy & 3Blue1Brown courses, right inside the app (`app.html#learn`)
+- 🌗 **Dark/light brutalist UI** — zero frameworks, instant load
 
 ---
 
@@ -84,13 +119,12 @@ The lineup tracks the **models that are actually live right now** (August 2026),
 **Option 2 — Run locally:**
 
 ```bash
-# Clone it
 git clone https://github.com/indranil122/universal-llm-tokenizer.git
 cd universal-llm-tokenizer
 
-# Serve it (pick one)
 python -m http.server 8080     # then open http://localhost:8080
 npx serve .                    # or this
+npm test                       # run the accuracy suite
 ```
 
 That's it — there are **no dependencies, no build step, no node_modules**.
@@ -118,20 +152,69 @@ Tokens:[Hello(13225)] [ World(2024)] [!(0)]
 
 ---
 
+## 📊 How It Compares
+
+| Capability | 🔥 This tool | Vendor tokenizer pages | Typical online counters |
+|---|---|---|---|
+| Models covered | **24 across 12 vendors** | One vendor only | Usually GPT only |
+| Real vocabularies (byte-exact IDs) | ✅ 7 encodings embedded | Own models only | ❌ approximations |
+| Token ID + UTF-8 bytes + hex inspector | ✅ | ❌ | ❌ |
+| All-models battle + cost ranking | ✅ | ❌ | ❌ |
+| Context-window meter per model | ✅ | ❌ | Partial |
+| Works offline / fully client-side | ✅ | ❌ | Rarely |
+| Built-in video course academy | ✅ | ❌ | ❌ |
+| Price | Free, MIT | — | Ads / signup walls |
+
+---
+
+## ❓ FAQ
+
+<details>
+<summary><b>Is the tokenization actually exact?</b></summary>
+For OpenAI models and Llama — yes, <b>byte-for-byte</b>. The app embeds the official <code>o200k_base</code>, <code>cl100k_base</code> and <code>p50k_base</code> vocabulary files plus Llama 3's <code>tokenizer.json</code>, and the test suite asserts hardcoded ground-truth IDs originally verified against the official tiktoken runtime. Vendors that don't publish their tokenizer files (Anthropic, Google, xAI…) are clearly labeled as approximations/estimates, both here and in the app.
+</details>
+
+<details>
+<summary><b>Does my text leave my browser?</b></summary>
+No. There is no backend. Tokenization runs entirely in JavaScript on your machine — it even works offline once loaded. Paste your API keys, secrets, or unreleased code without worry (though we still recommend common sense).
+</details>
+
+<details>
+<summary><b>Why does one Hindi/Japanese word become 10+ tokens?</b></summary>
+Tokenizers are trained mostly on English-heavy internet text. Common English words get their own single token; rarer scripts get chopped into byte-level fragments. Same idea, 5–10× the tokens — and 5–10× the API cost. Try the <code>[ MULTILINGUAL ]</code> preset to see it live.
+</details>
+
+<details>
+<summary><b>Why can't LLMs count letters or reverse strings?</b></summary>
+Because they never see letters — they see token IDs. A word like <code>.DefaultCellStyle</code> can be one single token, so asking how many "l"s it contains is like asking how many letters are in the number 7. It's a tokenization artifact, not stupidity.
+</details>
+
+<details>
+<summary><b>Which model should I pick to spend fewer tokens?</b></summary>
+Open the <code>[ ALL MODELS ]</code> battle tab with your real prompt and sort by token count — bigger vocabularies usually compress better, but pricing differs wildly, so check the estimated cost column too.
+</details>
+
+<details>
+<summary><b>How do I add a new model?</b></summary>
+Add a config in <code>tokenizers/vocabularies.js</code>, an <code>&lt;option&gt;</code> in <code>app.html</code>, and run <code>npm test</code> — a guard test ensures the dropdown never drifts from the model database. For byte-exact support, convert an official vocabulary file with <code>tools/convert_vocab.js</code>.
+</details>
+
+---
+
 ## 📁 Project Structure
 
 ```
-├── app.html                 # Main UI (playground, compare, BPE, all-models battle)
+├── app.html                 # Main UI (playground, compare, BPE, all-models battle, learn)
 ├── index.html               # Landing page
 ├── landing.css              # Landing page styling
 ├── app.js                   # Main controller: tokenization, sync, metrics, popovers
-├── index.css                # App styling (light brutalist theme)
+├── index.css                # App styling (light/dark brutalist theme)
 ├── favicon.svg              # Site icon
 ├── social-preview.png       # Social share image
 ├── test/
 │   └── tokenizer.test.js    # Zero-dependency node:test suite (npm test)
 ├── tokenizers/
-│   ├── vocabularies.js      # 15 model configs (context windows, costs, exact flags)
+│   ├── vocabularies.js      # 24 model configs (context windows, costs, exact flags)
 │   ├── tiktoken.js          # Exact byte-BPE engine (verified vs official tiktoken)
 │   ├── bpe.js               # Approximate Byte-Pair Encoding engine
 │   ├── wordpiece.js         # WordPiece engine (BERT)
@@ -174,18 +257,32 @@ The app ships with a built-in **LEARN tab** (`app.html#learn`) — a curated aca
 
 ## 🤝 Contributing
 
-Have an idea to make this more viral? PRs are welcome!
+This is a **hackathon-friendly, first-PR-friendly repo** — vanilla JS, zero build tools, tests in one command. Hacktoberfest participants welcome!
 
-- 🌐 **More models** — add new vocabularies (e.g., Phi, Nemotron, Kimi) or refresh model names as new versions ship
-- 🎯 **More exact vocabularies** — Anthropic/xAI/Google don't publish theirs, but any tokenizer with a public file can be swapped in via `tools/convert_vocab.js`
-- 📈 **Token-efficient prompt tips** — in-app optimization suggestions
-- ✨ **Anything** that makes tokenization more fun to learn
+Good first issues:
+
+- [ ] 🌐 **More models** — add configs (Phi, Nemotron, Amazon Nova, Muse…) or refresh names as new versions ship
+- [ ] 🎯 **More exact vocabularies** — any tokenizer with a public file can be swapped in via `tools/convert_vocab.js`
+- [ ] 📸 **Demo GIF** for this README
+- [ ] 🌍 **i18n** — translate the landing page
+- [ ] 📈 **Token-efficient prompt tips** — in-app optimization suggestions
+- [ ] ✨ Anything that makes tokenization more fun to learn
+
+1. Fork → branch → change
+2. `npm test`
+3. PR with screenshots if it's visual
 
 ---
 
 ## 📜 License
 
-[MIT](LICENSE) — free to use, fork, and remix. If this helped you, a ⭐ would make my day!
+[MIT](LICENSE) — free to use, fork, and remix.
+
+---
+
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=indranil122/universal-llm-tokenizer&type=Date)](https://star-history.com/#indranil122/universal-llm-tokenizer&Date)
 
 ---
 
@@ -193,6 +290,10 @@ Have an idea to make this more viral? PRs are welcome!
 
 **Made with ❤️ for the open-source AI community**
 
-[![GitHub stars](https://img.shields.io/github/stars/indranil122/universal-llm-tokenizer?style=social)](https://github.com/indranil122/universal-llm-tokenizer)
+[⭐ Star this repo](https://github.com/indranil122/universal-llm-tokenizer/stargazers) · [🐛 Report bug](https://github.com/indranil122/universal-llm-tokenizer/issues) · [💬 Discussions](https://github.com/indranil122/universal-llm-tokenizer/discussions)
+
+[![Share on X](https://img.shields.io/badge/Share_on-X-000000?style=flat&logo=x&logoColor=white)](https://twitter.com/intent/tweet?text=See%20how%20GPT-5.6%2C%20Claude%2C%20Gemini%2C%20Llama%20%26%2020%2B%20LLMs%20tokenize%20your%20text%20%E2%80%94%20live%2C%20byte-exact%2C%20100%25%20in%20your%20browser&url=https://github.com/indranil122/universal-llm-tokenizer)
+[![Share on Reddit](https://img.shields.io/badge/Share_on-Reddit-FF4500?style=flat&logo=reddit&logoColor=white)](https://reddit.com/submit?url=https://github.com/indranil122/universal-llm-tokenizer&title=I%20built%20a%20free%20LLM%20tokenizer%20visualizer%20for%2024%20models%20—%20byte-exact%20tiktoken%2C%20zero%20servers)
+[![Share on LinkedIn](https://img.shields.io/badge/Share_on-LinkedIn-0A66C2?style=flat&logo=linkedin&logoColor=white)](https://www.linkedin.com/sharing/share-offsite/?url=https://github.com/indranil122/universal-llm-tokenizer)
 
 </div>
