@@ -6,7 +6,7 @@
 
 ### *Paste a prompt. Watch 24 AI models fight over it - token by token.*
 
-**See exactly how GPT-5.6, Claude Fable 5, Gemini 3.1, Llama 4, Kimi K3, DeepSeek V4 & 20 more models slice your text into subword tokens — live, color-coded, with byte-exact token IDs.**
+**See exactly how GPT-5.6, Claude Fable 5, Gemini 3.1, Llama 4, Kimi K3, DeepSeek V4 & 20 more models slice your text into subword tokens - live, color-coded, with byte-exact token IDs.**
 
 [![Live Demo](https://img.shields.io/badge/%F0%9F%96%A5%EF%B8%8F_Live_Demo-GitHub_Pages-2ea44f?style=for-the-badge)](https://indranil122.github.io/universal-llm-tokenizer/)
 [![Zero Dependencies](https://img.shields.io/badge/Zero_Dependencies-Vanilla_JS-f7df1e?style=for-the-badge)]()
