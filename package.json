@@ -4,10 +4,13 @@
   "description": "Universal LLM Tokenizer & Visualizer for all AI models",
   "main": "index.html",
   "scripts": {
-    "dev": "python -m http.server 8080",
-    "start": "python -m http.server 8080",
+    "dev": "node server.js",
+    "start": "node server.js",
     "serve": "npx serve .",
     "test": "node --test"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "keywords": [
     "tokenizer",

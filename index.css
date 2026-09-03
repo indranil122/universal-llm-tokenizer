@@ -1,8 +1,9 @@
-/* ==========================================================================
+﻿/* ==========================================================================
    Universal LLM Tokenizer - Brutalist Styling System
    ========================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap');
+/* Fonts are linked via <link rel="preconnect"> + <link rel="stylesheet"> in
+   app.html (non-blocking, preconnected) â€” do not re-add @import here. */
 
 :root {
   --bg-dark: #F4F4F0;
@@ -98,7 +99,7 @@ html {
 
 /* Dark theme: surfaces that are hardcoded #FFFFFF in light mode must flip
    to dark, otherwise light theme text colors (--text-primary etc.) render
-   invisible on them. Token pills keep their own light chips — they read fine
+   invisible on them. Token pills keep their own light chips â€” they read fine
    on a dark canvas and mirror the light-theme pill palette. */
 [data-theme="dark"] .editor-sync-container,
 [data-theme="dark"] .tokens-display-box,
@@ -987,7 +988,7 @@ body::before {
   height: 100%;
   object-fit: cover;
   filter: saturate(0.92);
-  transition: transform 0.25s ease, filter 0.25s ease;
+  transition: transform var(--dur-2) var(--ease-snap), filter var(--dur-2) var(--ease-snap);
 }
 .learn-video:hover .yt-thumb {
   transform: scale(1.045);
@@ -1533,3 +1534,313 @@ body::before {
   .main-wrapper { padding: 1rem; }
   .control-bar { padding: 1rem; }
 }
+
+/* ==========================================================================
+   MOTION SYSTEM v2 (FRONTEND_UX_PLAN.md) - Mechanical precision:
+   fast & hard (120-220ms), transform/opacity only, red is the event color.
+   ========================================================================== */
+
+:root {
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 320ms;
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-mech: steps(6, end);
+}
+
+/* Global reduced-motion kill switch (web.dev pattern: 1ms + -1ms delay keeps
+   animationend/transitionend firing so JS logic never breaks) */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: -1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Keyframes library */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.92); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes shake-x {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-7px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(3px); }
+}
+@keyframes flash-red {
+  0% { box-shadow: 0 0 0 3px var(--border-active); }
+  100% { box-shadow: 0 0 0 0 rgba(255, 42, 42, 0); }
+}
+@keyframes blink-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes aa-sweep {
+  0% { top: -14%; }
+  100% { top: 114%; }
+}
+@keyframes battle-grow {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes stamp-slam {
+  0% { transform: translateX(110%) skewX(-12deg); }
+  60% { transform: translateX(-4%) skewX(-12deg); }
+  100% { transform: translateX(0) skewX(-12deg); }
+}
+@keyframes ants-march {
+  to { background-position: 16px 0; }
+}
+
+/* Cross-document view transitions (Chrome 126+): landing <-> app handoff */
+@view-transition { navigation: auto; }
+::view-transition-old(root) {
+  animation: 140ms cubic-bezier(0.2, 0, 0, 1) both vt-out;
+}
+::view-transition-new(root) {
+  animation: 180ms cubic-bezier(0.16, 1, 0.3, 1) both vt-in;
+}
+@keyframes vt-out {
+  to { opacity: 0; transform: translateY(-6px); }
+}
+@keyframes vt-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Fallback view entrance (when View Transitions API is unavailable) */
+.app-view.view-enter {
+  animation: fade-up var(--dur-2) var(--ease-snap) both;
+}
+
+/* Generic entrance helper used by stagger() */
+.anim-enter {
+  animation: fade-up var(--dur-2) var(--ease-out) backwards;
+}
+
+/* ---- Token pills & bars: smooth hover + entrance ---- */
+.token-pill {
+  transition: background var(--dur-1) var(--ease-snap),
+              color var(--dur-1) var(--ease-snap),
+              transform var(--dur-1) var(--ease-snap),
+              box-shadow var(--dur-1) var(--ease-snap);
+}
+.token-pill.pill-pop {
+  animation: pop-in 140ms var(--ease-snap) backwards;
+  will-change: transform;
+}
+.token-bar {
+  transition: transform var(--dur-1) var(--ease-snap),
+              box-shadow var(--dur-1) var(--ease-snap),
+              background var(--dur-1) var(--ease-snap);
+}
+.highlight-backdrop .prompt-hl-span {
+  transition: box-shadow var(--dur-1) var(--ease-snap),
+              filter var(--dur-1) var(--ease-snap);
+}
+.highlight-backdrop .prompt-hl-span.hovered {
+  filter: brightness(0.92);
+  box-shadow: 0 3px 0 var(--border-active);
+}
+.tokens-overflow { margin-top: 0.75rem; align-self: flex-start; }
+
+/* ---- Popover: fade + rise, no more teleport ---- */
+.token-popover {
+  opacity: 0;
+  transform: translateY(4px);
+  transition: opacity var(--dur-1) var(--ease-snap),
+              transform var(--dur-1) var(--ease-snap);
+  pointer-events: none;
+}
+.token-popover.open {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Context meter: real progress bar ---- */
+.context-meter-fill {
+  transition: width var(--dur-3) var(--ease-out);
+}
+.context-meter-fill.flash {
+  animation: flash-red 0.5s var(--ease-snap) 1;
+}
+
+/* ---- Sticky header elevation ---- */
+.app-header {
+  transition: box-shadow var(--dur-1) var(--ease-snap);
+}
+.app-header.scrolled {
+  box-shadow: 0 6px 0 -2px var(--border-color);
+}
+
+/* ---- Sliding tab indicator ---- */
+.nav-tabs { position: relative; }
+.tab-indicator {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  background: var(--border-active);
+  transition: transform var(--dur-2) var(--ease-snap), width var(--dur-2) var(--ease-snap);
+  pointer-events: none;
+  z-index: 2;
+}
+.tab-btn:focus-visible { outline-offset: -3px; }
+
+/* ---- Buttons: copy feedback flash ---- */
+.preset-btn.flash-ok {
+  animation: flash-red 0.5s var(--ease-snap) 1;
+  background: var(--border-active);
+  color: var(--bg-dark);
+}
+
+/* ---- Metrics: tabular numerals already set; keep pop on change subtle ---- */
+.metric-value { transition: color var(--dur-1) var(--ease-snap); }
+
+/* ---- Battle table: staggered rows + token bars ---- */
+.battle-table tbody tr {
+  animation: fade-up var(--dur-2) var(--ease-out) both;
+  animation-delay: var(--row-delay, 0ms);
+}
+.battle-bar {
+  display: block;
+  height: 6px;
+  margin-top: 5px;
+  background: var(--bg-dark);
+  border: 1px solid var(--border-color);
+  overflow: hidden;
+}
+.battle-row-active .battle-bar { background: rgba(255,255,255,0.25); border-color: var(--bg-dark); }
+.battle-bar-fill {
+  display: block;
+  height: 100%;
+  background: var(--border-active);
+  transform-origin: left center;
+  animation: battle-grow 0.45s var(--ease-out) both;
+}
+.battle-row-active .battle-bar-fill { background: #FFFFFF; }
+.trophy { display: inline-block; animation: pop-in 0.3s var(--ease-snap) 0.3s both; }
+
+/* ---- Guess game: shake, stamp, pop ---- */
+.guess-phrase { position: relative; overflow: hidden; }
+.guess-phrase.shaking { animation: shake-x 0.4s var(--ease-snap) 1; }
+.guess-phrase.stamped { animation: pop-in 0.18s var(--ease-snap) 1; }
+.guess-feedback { position: relative; overflow: hidden; }
+.gf-stamp {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background: var(--border-active);
+  color: #FFFFFF;
+  font-family: var(--font-heading);
+  font-size: 0.85rem;
+  padding: 0.35rem 1.2rem 0.35rem 2.2rem;
+  transform: skewX(-12deg) translateX(0);
+  animation: stamp-slam 0.45s var(--ease-snap) both;
+  pointer-events: none;
+}
+.gf-verdict { animation: fade-up var(--dur-2) var(--ease-out) both; }
+
+/* ---- BPE stepper: entrance + play mode ---- */
+.bpe-controls { justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1.25rem; }
+.bpe-step-card {
+  transition: opacity var(--dur-2) var(--ease-snap), transform var(--dur-2) var(--ease-snap);
+}
+.bpe-step-card.bpe-wait {
+  opacity: 0.12;
+  transform: translateY(6px);
+}
+.bpe-step-card.bpe-active { animation: flash-red 0.5s var(--ease-snap) 1; }
+
+/* ---- Script chips pop in when a new script is detected ---- */
+.script-chip { animation: pop-in 160ms var(--ease-snap) both; }
+
+/* ---- ASCII hero: CSS-only scanline sweep (replaces JS interval) ---- */
+.ascii-art { position: relative; }
+.ascii-art::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 14%;
+  top: -14%;
+  background: linear-gradient(180deg, rgba(255,42,42,0) 0%, rgba(255,42,42,0.16) 50%, rgba(255,42,42,0) 100%);
+  pointer-events: none;
+  animation: aa-sweep 5s steps(14) infinite;
+}
+
+/* ---- Cost Lab: marching-ants drag state ---- */
+.file-drop-zone.dragging {
+  background-image: repeating-linear-gradient(45deg, var(--border-active) 0 2px, transparent 2px 16px);
+  background-size: 16px 16px;
+  animation: ants-march 0.5s linear infinite;
+}
+
+/* ---- Mapping table cap note ---- */
+.map-cap-note {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+/* ---- Toast system ---- */
+.toast-stack {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 5000;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: flex-end;
+}
+.toast {
+  background: var(--border-color);
+  color: var(--bg-dark);
+  border-left: 6px solid var(--border-active);
+  font-weight: 700;
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  padding: 0.7rem 1.1rem;
+  box-shadow: 4px 4px 0 rgba(0,0,0,0.35);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity var(--dur-2) var(--ease-snap), transform var(--dur-2) var(--ease-snap);
+}
+.toast.toast-on {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Mobile: tabs scroll horizontally with snap ---- */
+@media (max-width: 1024px) {
+  .nav-tabs {
+    overflow-x: auto;
+    scroll-snap-type: x proximity;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  .tab-btn {
+    white-space: nowrap;
+    scroll-snap-align: start;
+    flex: 0 0 auto;
+  }
+  .tab-indicator { display: none; }
+}
+
+/* ---- Glossary hint chips ---- */
+.glossary { cursor: help; transition: color var(--dur-1) var(--ease-snap), background var(--dur-1) var(--ease-snap); }
+.glossary:hover { color: var(--border-active); }

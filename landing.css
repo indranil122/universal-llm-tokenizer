@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap');
+﻿/* Fonts are linked via <link rel="preconnect"> + <link rel="stylesheet"> in
+   index.html (non-blocking, preconnected) â€” do not re-add @import here. */
 
 :root {
   --bg-color: #F4F4F0;
@@ -36,7 +37,7 @@ body {
   position: relative;
 }
 
-/* Subtle grain texture — breaks digital flatness without leaving brutalism */
+/* Subtle grain texture â€” breaks digital flatness without leaving brutalism */
 body::before {
   content: "";
   position: fixed;
@@ -431,4 +432,203 @@ body::before {
   .footer-bottom { grid-template-columns: 1fr; }
   .fb-cell { padding: 0.9rem 1.5rem; }
   .fb-center { border-left: none; border-right: none; border-top: 2px solid var(--grid-line); border-bottom: 2px solid var(--grid-line); }
+}
+
+/* ==========================================================================
+   LANDING MOTION SYSTEM v2 - same mechanical language as the app:
+   120-220ms, transform/opacity only, red events, steps() for machinery.
+   ========================================================================== */
+
+:root {
+  --dur-1: 120ms;
+  --dur-2: 180ms;
+  --dur-3: 320ms;
+  --ease-snap: cubic-bezier(0.2, 0, 0, 1);
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-delay: -1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-delay: -1ms !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pop-in {
+  0% { opacity: 0; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes hero-scan {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400vw); }
+}
+@keyframes blink-caret {
+  0%, 49% { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+@keyframes boot-flash {
+  0% { opacity: 0; }
+  30% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Cross-document view transition opt-in (Chrome 126+): handoff to app.html */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: 140ms cubic-bezier(0.2, 0, 0, 1) both vt-out; }
+::view-transition-new(root) { animation: 200ms cubic-bezier(0.16, 1, 0.3, 1) both vt-in; }
+@keyframes vt-out { to { opacity: 0; } }
+@keyframes vt-in { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* Scroll reveals (IntersectionObserver adds .revealed) */
+.reveal {
+  opacity: 0;
+  transform: translateY(10px);
+  transition: opacity var(--dur-3) var(--ease-out), transform var(--dur-3) var(--ease-out);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Feature cards: lift + red shadow flash on hover */
+.feature-card {
+  transition: transform var(--dur-1) var(--ease-snap), box-shadow var(--dur-1) var(--ease-snap);
+}
+.feature-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0 var(--accent-red);
+}
+.feature-header { transition: color var(--dur-1) var(--ease-snap); }
+.feature-card:hover .feature-header { color: var(--accent-red); }
+
+/* Hero: scanline echo under the title + live token slicing */
+.hero-title { position: relative; }
+.hero-scan {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 160px;
+  height: 4px;
+  background: var(--accent-red);
+  animation: hero-scan 7s steps(70) infinite;
+  pointer-events: none;
+}
+.hero-word { display: inline-block; }
+.ht-chip {
+  display: inline-block;
+  font-family: 'Space Mono', monospace;
+  font-size: 0.32em;
+  font-weight: 700;
+  padding: 0.12em 0.3em;
+  margin: 0 0.06em;
+  border: 2px solid var(--grid-line);
+  animation: pop-in 140ms var(--ease-snap) both;
+}
+.ht-chip[data-c="0"] { background: #FFFFFF; color: #050505; }
+.ht-chip[data-c="1"] { background: var(--accent-red); color: #FFFFFF; }
+.ht-chip[data-c="2"] { background: #050505; color: #FFFFFF; }
+
+/* CTA: sliding red fill + blinking caret (LAUNCH_TOKENIZER_) */
+.btn-primary { position: relative; overflow: hidden; }
+.btn-primary::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--accent-red);
+  transform: translateX(-101%);
+  transition: transform var(--dur-2) var(--ease-snap);
+}
+.btn-primary:hover::before,
+.btn-primary:focus-visible::before { transform: translateX(0); }
+.btn-primary::after {
+  content: "_";
+  animation: blink-caret 1.1s steps(2) infinite;
+}
+.btn-primary, .btn-secondary { position: relative; }
+
+/* Boot flash fallback for browsers without cross-document view transitions */
+body.boot-flash::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background: var(--accent-red);
+  z-index: 10000;
+  pointer-events: none;
+  animation: boot-flash 160ms linear both;
+}
+
+/* Mini live demo: tokenize right here on the landing page */
+.mini-demo {
+  border-bottom: 2px solid var(--grid-line);
+  padding: 1.5rem 2rem 2rem;
+}
+.md-kicker {
+  color: var(--accent-red);
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.14em;
+}
+.md-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.9rem;
+}
+.md-input {
+  flex: 1;
+  min-width: 240px;
+  background: var(--bg-color);
+  border: 2px solid var(--grid-line);
+  color: var(--text-primary);
+  font-family: 'Space Mono', monospace;
+  font-weight: 700;
+  font-size: 1rem;
+  padding: 0.65rem 0.9rem;
+  outline: none;
+  transition: box-shadow var(--dur-1) var(--ease-snap);
+}
+.md-input:focus { box-shadow: 4px 4px 0 var(--accent-red); }
+.md-count {
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid var(--grid-line);
+  padding: 0.55rem 0.9rem;
+  white-space: nowrap;
+}
+.md-count b { color: var(--accent-red); font-size: 1.1rem; }
+.md-out {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 1rem;
+  min-height: 2.2rem;
+}
+.md-chip {
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.28rem 0.5rem;
+  border: 2px solid var(--grid-line);
+  animation: pop-in 130ms var(--ease-snap) both;
+}
+.md-chip[data-c="0"] { background: #FFFFFF; color: #050505; }
+.md-chip[data-c="1"] { background: #050505; color: #FFFFFF; }
+.md-chip[data-c="2"] { background: #CCCCCC; color: #050505; }
+.md-chip[data-c="3"] { background: var(--accent-red); color: #FFFFFF; }
+[data-theme="dark"] .md-chip[data-c="0"] { background: #111111; color: #F4F4F0; }
+[data-theme="dark"] .md-chip[data-c="2"] { background: #333333; color: #F4F4F0; }
+.md-hint { font-size: 0.72rem; font-weight: 700; color: var(--text-primary); opacity: 0.55; margin-top: 0.6rem; }
+
+@media (max-width: 768px) {
+  .mini-demo { padding: 1.25rem 1.5rem 1.75rem; }
+  .hero-scan { display: none; }
 }

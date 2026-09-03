@@ -7,6 +7,76 @@
  */
 
 document.addEventListener("DOMContentLoaded", () => {
+  // ==========================================
+  // Motion & A11y Foundation (FRONTEND_UX_PLAN.md Phase 0)
+  // REDUCED: CSS kill-switches can't stop rAF-driven motion,
+  // so JS utilities must check the media query themselves.
+  // ==========================================
+  const REDUCED = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function debounce(fn, ms) {
+    let t;
+    return function (...args) {
+      clearTimeout(t);
+      t = setTimeout(() => fn.apply(this, args), ms);
+    };
+  }
+
+  // Tween a numeric counter element old -> new. Tracks el.__val as source of truth.
+  function animateCount(el, to) {
+    if (!el) return;
+    const from = typeof el.__val === "number" ? el.__val : parseInt(String(el.textContent).replace(/[^\d.-]/g, ""), 10) || 0;
+    el.__val = to;
+    if (REDUCED || from === to) {
+      el.textContent = to.toLocaleString();
+      return;
+    }
+    if (el.__raf) cancelAnimationFrame(el.__raf);
+    const dur = 260;
+    const t0 = performance.now();
+    const tick = (now) => {
+      const p = Math.min(1, (now - t0) / dur);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + (to - from) * eased).toLocaleString();
+      if (p < 1) el.__raf = requestAnimationFrame(tick);
+    };
+    el.__raf = requestAnimationFrame(tick);
+  }
+
+  // Apply an entrance class with capped stagger delays (inline animation-delay).
+  function stagger(nodes, stepMs, cap) {
+    if (!nodes || !nodes.length) return;
+    const step = stepMs || 18;
+    const limit = cap || 40;
+    nodes.forEach((el, i) => {
+      if (!(el instanceof HTMLElement)) return;
+      el.style.animationDelay = Math.min(i, limit) * step + "ms";
+      el.classList.add("anim-enter");
+    });
+  }
+
+  // Brutalist toast: black box, red left border, slides in bottom-right.
+  const toastStack = document.createElement("div");
+  toastStack.className = "toast-stack";
+  toastStack.setAttribute("aria-live", "polite");
+  document.body.appendChild(toastStack);
+  function showToast(msg) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.setAttribute("role", "status");
+    toast.textContent = msg;
+    toastStack.appendChild(toast);
+    if (!REDUCED) {
+      requestAnimationFrame(() => requestAnimationFrame(() => toast.classList.add("toast-on")));
+      setTimeout(() => {
+        toast.classList.remove("toast-on");
+        setTimeout(() => toast.remove(), 220);
+      }, 2200);
+    } else {
+      setTimeout(() => toast.remove(), 2200);
+    }
+  }
+
   // Model Instances
   const modelConfigs = window.TOKENIZER_VOCABS.models;
   let activeModelKey = "gpt-5-6";
@@ -109,6 +179,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentTokens = [];
         const cfg = configFor(activeModelKey);
         const sizes = { o200k_base: "3.6", o200k_harmony: "3.7", cl100k_base: "1.5", p50k_base: "0.7", llama3: "4.2", qwen3: "5.2", qwen35: "9.7", cohere: "9.0" };
+        tokensDisplayBox.__rendered = [];
         tokensDisplayBox.innerHTML =
           `<div class="loading-hint">⏳ Loading exact tokenizer data (<code>${cfg.tiktokenData}</code>, ` +
           `~${sizes[cfg.tiktokenData] || "1"} MB) — one-time download…</div>`;
@@ -135,38 +206,64 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (v !== refreshVersion) return;
 
-    // Render everything
-    renderTokenPills(tokensDisplayBox, currentTokens);
-    renderPromptHighlights(text, currentTokens);
-    renderMappingTable(text, currentTokens);
-    updateMetrics(text, currentTokens);
-    updateScriptChips(text);
-    if (!compareContainer.classList.contains("hidden")) {
-      renderTokenPills(compareTokensDisplayBox, currentCompareTokens);
-    }
-    updateBPESteps(text);
-    updateExactBadge();
+    // Render everything (batched into one frame; input events are debounced)
+    requestAnimationFrame(() => {
+      renderTokenPills(tokensDisplayBox, currentTokens);
+      renderPromptHighlights(text, currentTokens);
+      renderMappingTable(text, currentTokens);
+      updateMetrics(text, currentTokens);
+      updateScriptChips(text);
+      if (!compareContainer.classList.contains("hidden")) {
+        renderTokenPills(compareTokensDisplayBox, currentCompareTokens);
+      }
+      updateBPESteps(text);
+      updateExactBadge();
+    });
   }
 
   // ==========================================
   // Render Token Pills / Bars
   // ==========================================
   function renderTokenPills(container, tokens) {
-    container.innerHTML = "";
+    container.__tokens = tokens;
+    const CAP = 500;
+    const list = container.__showAll ? tokens : tokens.slice(0, CAP);
 
     if (tokens.length === 0) {
       container.innerHTML = `<span style="color: var(--text-muted); font-size: 0.9rem;">Type or paste text above to see tokens live...</span>`;
+      container.__rendered = [];
       return;
     }
 
+    // will-change hygiene: apply only during DOM mutation, remove after paint
+    if (!REDUCED) {
+      container.style.willChange = "transform";
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => { container.style.willChange = ""; });
+      });
+    }
+
     if (viewMode === "bars") {
-      renderTokenBars(container, tokens);
+      renderTokenBars(container, list);
       return;
     }
 
     container.classList.remove("bar-mode");
 
-    tokens.forEach((token, idx) => {
+    // --- Diff rendering: reuse unchanged pills, only mutate the changed tail ---
+    const prev = container.__rendered || [];
+    const same = (a, t) => a.token.id === t.id && a.token.text === t.text && a.token.start === t.start;
+    let reuse = 0;
+    while (reuse < prev.length && reuse < list.length && same(prev[reuse], list[reuse])) reuse++;
+
+    for (let j = reuse; j < prev.length; j++) prev[j].el.remove();
+    if (reuse === 0) container.innerHTML = "";
+
+    const frag = document.createDocumentFragment();
+    let made = 0;
+    const madeEls = [];
+    for (let idx = reuse; idx < list.length; idx++) {
+      const token = list[idx];
       const pill = document.createElement("div");
       const colorIndex = idx % 6;
       pill.className = `token-pill ${token.type === 'special' ? 'special-token' : ''}`;
@@ -182,6 +279,12 @@ document.addEventListener("DOMContentLoaded", () => {
         <span class="token-id-badge">${token.id}</span>
       `;
 
+      // Entrance: pop-in with capped stagger (new pills only)
+      if (!REDUCED && made < 48) {
+        pill.style.animationDelay = made * 14 + "ms";
+        pill.classList.add("pill-pop");
+      }
+
       // Hover Interaction: Link to prompt editor substring
       pill.addEventListener("mouseenter", (e) => {
         pill.classList.add("hovered");
@@ -195,12 +298,37 @@ document.addEventListener("DOMContentLoaded", () => {
         hidePopover();
       });
 
-      container.appendChild(pill);
-    });
+      frag.appendChild(pill);
+      madeEls.push(pill);
+      made++;
+    }
+    container.appendChild(frag);
+
+    const rendered = [];
+    for (let j = 0; j < reuse; j++) rendered.push(prev[j]);
+    for (let j = 0; j < madeEls.length; j++) rendered.push({ token: list[reuse + j], el: madeEls[j] });
+    container.__rendered = rendered;
+
+    // Overflow control for very large inputs
+    const oldNote = container.querySelector(".tokens-overflow");
+    if (oldNote) oldNote.remove();
+    if (!container.__showAll && tokens.length > CAP) {
+      const more = document.createElement("button");
+      more.className = "preset-btn tokens-overflow";
+      more.type = "button";
+      more.textContent = `[ SHOW ALL ${tokens.length.toLocaleString()} TOKENS — FIRST ${CAP} RENDERED ]`;
+      more.addEventListener("click", () => {
+        container.__showAll = true;
+        renderTokenPills(container, container.__tokens || tokens);
+      });
+      container.appendChild(more);
+    }
   }
 
   function renderTokenBars(container, tokens) {
     container.classList.add("bar-mode");
+    container.innerHTML = "";
+    container.__rendered = []; // bars wipe pills — prevent stale reuse later
     const wrap = document.createElement("div");
     wrap.className = "token-bars";
     const maxBytes = Math.max.apply(null, tokens.map(t => (t.bytes && t.bytes.length) || 1));
@@ -211,7 +339,7 @@ document.addEventListener("DOMContentLoaded", () => {
       bar.dataset.color = idx % 6;
       bar.dataset.tokenIdx = idx;
       // width proportional to byte length — longer subwords = wider bars
-      const w = Math.max(3, Math.round((((t.bytes && t.bytes.length) || 1) / maxBytes) * 100));
+      const w = Math.max(3, Math.round((((token.bytes && token.bytes.length) || 1) / maxBytes) * 100));
       bar.style.width = w + "%";
       bar.title = `${token.displaySubword || token.text}  (id ${token.id})`;
 
@@ -229,6 +357,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     container.appendChild(wrap);
+    const oldNote = container.querySelector(".tokens-overflow");
+    if (oldNote) oldNote.remove();
+    if (!container.__showAll && container.__tokens && container.__tokens.length > 500) {
+      const more = document.createElement("button");
+      more.className = "preset-btn tokens-overflow";
+      more.type = "button";
+      more.textContent = `[ SHOW ALL ${container.__tokens.length.toLocaleString()} TOKENS — FIRST 500 RENDERED ]`;
+      more.addEventListener("click", () => {
+        container.__showAll = true;
+        renderTokenPills(container, container.__tokens);
+      });
+      container.appendChild(more);
+    }
   }
 
   viewToggle.addEventListener("click", () => {
@@ -304,8 +445,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentTokenIdx = 0;
     const wordRegex = /\s+|[^\s\w]+|\w+/g;
     let match;
+    let rowCount = 0;
+    const ROW_CAP = 200;
 
     while ((match = wordRegex.exec(text)) !== null) {
+      if (rowCount >= ROW_CAP) break;
       const word = match[0];
       const start = match.index;
       const end = start + word.length;
@@ -352,6 +496,13 @@ document.addEventListener("DOMContentLoaded", () => {
       tr.appendChild(tdTokens);
       tr.appendChild(tdCount);
       mappingTableBody.appendChild(tr);
+      rowCount++;
+    }
+
+    if (rowCount >= ROW_CAP) {
+      const note = document.createElement("tr");
+      note.innerHTML = `<td colspan="3" class="map-cap-note">// SHOWING FIRST ${ROW_CAP} WORDS — GET THE FULL BREAKDOWN VIA JSON/CSV EXPORT</td>`;
+      mappingTableBody.appendChild(note);
     }
   }
 
@@ -364,9 +515,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const tokenCount = tokens.length;
     const ratio = words > 0 ? (tokenCount / words).toFixed(2) : "0.00";
 
-    charCountElem.textContent = charCount.toLocaleString();
-    wordCountElem.textContent = words.toLocaleString();
-    tokenCountElem.textContent = tokenCount.toLocaleString();
+    animateCount(tokenCountElem, tokenCount);
+    animateCount(wordCountElem, words);
+    animateCount(charCountElem, charCount);
     ratioCountElem.textContent = `${ratio} tokens/word`;
 
     const config = configFor(activeModelKey);
@@ -375,12 +526,21 @@ document.addEventListener("DOMContentLoaded", () => {
       costEstimateElem.textContent = `$${estCost}`;
     }
 
-    // Context window meter
+    // Context window meter (width transition handled in CSS; state change flashes)
     const ctx = config && config.contextWindow;
     if (ctx && contextBar && contextLabel) {
       const pct = Math.min(100, (tokenCount / ctx) * 100);
       contextBar.style.width = pct.toFixed(3) + "%";
       contextLabel.textContent = `${pct.toFixed(2)}% / ${ctx.toLocaleString()}`;
+      const state = pct > 90 ? "danger" : pct > 50 ? "warn" : "";
+      if (state !== contextBar.__state) {
+        contextBar.__state = state;
+        contextBar.classList.remove("flash");
+        if (state && !REDUCED) {
+          void contextBar.offsetWidth; // restart animation
+          contextBar.classList.add("flash");
+        }
+      }
       contextBar.classList.toggle("warn", pct > 50 && pct <= 90);
       contextBar.classList.toggle("danger", pct > 90);
       contextLabel.classList.toggle("danger-text", pct > 90);
@@ -445,7 +605,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // Floating Tooltip Popover
   // ==========================================
   function showPopover(e, token) {
+    clearTimeout(popoverHideTimer);
     tokenPopover.style.display = "flex";
+    requestAnimationFrame(() => tokenPopover.classList.add("open"));
 
     document.getElementById("popoverSubword").textContent = token.displaySubword || token.text;
     document.getElementById("popoverId").textContent = token.id;
@@ -468,8 +630,11 @@ document.addEventListener("DOMContentLoaded", () => {
     tokenPopover.style.top = `${top}px`;
   }
 
+  let popoverHideTimer = null;
   function hidePopover() {
-    tokenPopover.style.display = "none";
+    tokenPopover.classList.remove("open");
+    clearTimeout(popoverHideTimer);
+    popoverHideTimer = setTimeout(() => { tokenPopover.style.display = "none"; }, 170);
   }
 
   // ==========================================
@@ -481,6 +646,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const steps = activeTokenizer.getMergeSteps(text);
     bpeStepsContainer.innerHTML = "";
+
+    const controls = document.createElement("div");
+    controls.className = "bpe-controls";
+    controls.innerHTML = `
+      <span class="control-label" id="bpeProgress">${steps.length} MERGE STEPS DETECTED — WATCH VOCABULARY EMERGE FROM RAW BYTES</span>
+      <button id="bpePlay" class="preset-btn" type="button">[ \u25B6 PLAY STEPS ]</button>`;
+    bpeStepsContainer.appendChild(controls);
 
     steps.forEach(st => {
       const card = document.createElement("div");
@@ -495,6 +667,59 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
       bpeStepsContainer.appendChild(card);
     });
+
+    // Entrance stagger (capped)
+    stagger(bpeStepsContainer.querySelectorAll(".bpe-step-card"));
+
+    // Auto-advance player: reveals steps one at a time, ~600ms cadence, PAUSE/RESUME + progress ticks + merged-pair flash
+    const playBtn = controls.querySelector("#bpePlay");
+    const progressLabel = controls.querySelector("#bpeProgress");
+    if (playBtn) {
+      let timer = null;
+      let k = 0;
+      let playing = false;
+
+      playBtn.addEventListener("click", () => {
+        const cards = bpeStepsContainer.querySelectorAll(".bpe-step-card");
+        if (REDUCED || !cards.length) return;
+
+        if (playing) {
+          playing = false;
+          clearInterval(timer);
+          playBtn.textContent = "[ \u25B6 RESUME ]";
+          showToast("PLAYBACK PAUSED");
+          return;
+        }
+
+        playing = true;
+        playBtn.textContent = "[ \u23F8 PAUSE ]";
+
+        if (k === 0 || k >= cards.length) {
+          k = 0;
+          cards.forEach(c => {
+            c.classList.remove("anim-enter", "bpe-active");
+            c.style.animationDelay = "";
+            c.classList.add("bpe-wait");
+          });
+        }
+
+        timer = setInterval(() => {
+          if (k >= cards.length) {
+            clearInterval(timer);
+            playing = false;
+            playBtn.textContent = "[ \u25B6 REPLAY STEPS ]";
+            progressLabel.innerHTML = `<b>${steps.length} / ${steps.length}</b> MERGES COMPLETED`;
+            return;
+          }
+
+          progressLabel.innerHTML = `STEP <b>${k + 1} / ${steps.length}</b> \u2014 WATCH VOCABULARY EMERGE`;
+          cards[k].classList.remove("bpe-wait");
+          cards[k].classList.add("bpe-active");
+          cards[k].scrollIntoView({ block: "nearest", behavior: "smooth" });
+          k++;
+        }, 600);
+      });
+    }
   }
 
   // ==========================================
@@ -524,6 +749,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     rows.sort((a, b) => a.count - b.count);
+    const maxCount = Math.max(1, ...rows.map(r => r.count));
 
     let html = `<div class="battle-note">Sorted by <strong>fewest tokens</strong> (cheapest & fastest wins). 🏆 = lowest token count. Click a row to inspect it in the playground.</div>`;
     html += `<table class="battle-table">
@@ -533,12 +759,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     rows.forEach((r, i) => {
       const active = r.key === activeModelKey ? ' class="battle-row-active"' : "";
-      const trophy = i === 0 && r.count > 0 ? " 🏆" : "";
-      html += `<tr${active} data-key="${r.key}">
+      const trophy = i === 0 && r.count > 0 ? ' <span class="trophy" aria-hidden="true">🏆</span>' : "";
+      const delay = Math.min(i, 40) * 20;
+      const barPct = Math.max(2, Math.round((r.count / maxCount) * 100));
+      html += `<tr${active} data-key="${r.key}" style="--row-delay:${delay}ms">
         <td>${i + 1}${trophy}</td>
         <td>${r.cfg.name}${r.cfg.exact ? ` <span class="exact-tag" title="Real vocabulary — matches official tiktoken">EXACT</span>` : ""}</td>
         <td class="battle-mono">${r.cfg.family}</td>
-        <td class="battle-mono battle-strong">${r.count.toLocaleString()}</td>
+        <td class="battle-mono battle-strong">${r.count.toLocaleString()}<span class="battle-bar" aria-hidden="true"><i class="battle-bar-fill" style="width:${barPct}%; animation-delay:${delay}ms"></i></span></td>
         <td class="battle-mono">${r.ratio.toFixed(2)}</td>
         <td class="battle-mono">$${r.cost.toFixed(4)}</td>
         <td class="battle-mono">${r.ctxPct === null ? "—" : r.ctxPct.toFixed(2) + "%"}</td>
@@ -573,7 +801,7 @@ document.addEventListener("DOMContentLoaded", () => {
     updateTokenization();
   });
 
-  promptInput.addEventListener("input", updateTokenization);
+  promptInput.addEventListener("input", debounce(updateTokenization, 60));
 
   // Preset Buttons
   document.querySelectorAll(".preset-btn").forEach(btn => {
@@ -619,6 +847,38 @@ document.addEventListener("DOMContentLoaded", () => {
   tabGuess.addEventListener("click", () => switchTab("guess"));
   tabLearn.addEventListener("click", () => switchTab("learn"));
 
+  // Sliding tab indicator (transform-based, --dur-2 --ease-snap)
+  const navTabsEl = document.querySelector(".nav-tabs");
+  const tabIndicator = document.createElement("span");
+  tabIndicator.className = "tab-indicator";
+  tabIndicator.setAttribute("aria-hidden", "true");
+  if (navTabsEl) navTabsEl.appendChild(tabIndicator);
+  function moveTabIndicator() {
+    const active = document.querySelector(".tab-btn.active");
+    if (!active || !tabIndicator || !navTabsEl) return;
+    tabIndicator.style.width = active.offsetWidth + "px";
+    tabIndicator.style.transform = `translateX(${active.offsetLeft}px)`;
+  }
+  window.addEventListener("resize", debounce(moveTabIndicator, 120));
+  moveTabIndicator();
+
+  // View containers are keyboard-focusable targets on tab switch (a11y)
+  [playgroundView, bpeStepView, battleView, learnView, guessView].forEach(v => {
+    v.setAttribute("tabindex", "-1");
+    v.classList.add("app-view");
+  });
+
+  // Sticky header elevation on scroll (hard offset shadow, --dur-1)
+  const appHeaderEl = document.querySelector(".app-header");
+  let headerScrolled = false;
+  window.addEventListener("scroll", () => {
+    const s = window.scrollY > 4;
+    if (s !== headerScrolled) {
+      headerScrolled = s;
+      if (appHeaderEl) appHeaderEl.classList.toggle("scrolled", s);
+    }
+  }, { passive: true });
+
   // ==========================================
   // ASCII / Hex Artwork — "TOKENS" drawn with its own UTF-8 codes
   // ==========================================
@@ -654,20 +914,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return lines.join("\n");
   }
 
-  function paintAsciiRow() {
-    // wrap each row so CSS can light a slow moving scanline
-    const band = Math.floor(Date.now() / 900) % 7;
-    asciiArtEl.innerHTML = escapeHtml(renderAsciiArt()).split("\n")
-      .map((row, i) => `<span class="aa-row${i === band ? " aa-lit" : ""}">${row}</span>`)
-      .join("\n");
-  }
-
   if (asciiArtEl) {
-    paintAsciiRow();
-    const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (!reduceMotion) {
-      setInterval(() => { if (!document.hidden) paintAsciiRow(); }, 900);
-    }
+    // Static paint + CSS sweep overlay (perf: no periodic innerHTML rebuilds;
+    // the scanline motion lives in .ascii-art::after in index.css)
+    asciiArtEl.innerHTML = escapeHtml(renderAsciiArt()).split("\n")
+      .map(row => `<span class="aa-row">${row}</span>`)
+      .join("\n");
 
     // companion hex dump of the product name — real UTF-8 bytes
     const dumpEl = document.getElementById("asciiDump");
@@ -755,36 +1007,60 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function switchTabInternal(tabName) {
-    [tabPlayground, tabCompare, tabStepBPE, tabBattle, tabGuess, tabLearn].forEach(btn => btn.classList.remove("active"));
-    [playgroundView, bpeStepView, battleView, learnView, guessView].forEach(view => view.classList.add("hidden"));
+    const apply = () => {
+      [tabPlayground, tabCompare, tabStepBPE, tabBattle, tabGuess, tabLearn].forEach(btn => btn.classList.remove("active"));
+      [playgroundView, bpeStepView, battleView, learnView, guessView].forEach(view => view.classList.add("hidden"));
 
-    if (tabName === "playground") {
-      tabPlayground.classList.add("active");
-      playgroundView.classList.remove("hidden");
-      compareContainer.classList.add("hidden");
-    } else if (tabName === "compare") {
-      tabCompare.classList.add("active");
-      playgroundView.classList.remove("hidden");
-      compareContainer.classList.remove("hidden");
-    } else if (tabName === "bpe") {
-      tabStepBPE.classList.add("active");
-      bpeStepView.classList.remove("hidden");
-    } else if (tabName === "battle") {
-      tabBattle.classList.add("active");
-      battleView.classList.remove("hidden");
-      renderBattle();
-      return;
-    } else if (tabName === "guess") {
-      tabGuess.classList.add("active");
-      guessView.classList.remove("hidden");
-      initGuessGame();
-      return;
-    } else if (tabName === "learn") {
-      tabLearn.classList.add("active");
-      learnView.classList.remove("hidden");
-      return;
+      let revealed = null;
+      if (tabName === "playground") {
+        tabPlayground.classList.add("active");
+        playgroundView.classList.remove("hidden");
+        compareContainer.classList.add("hidden");
+        revealed = playgroundView;
+      } else if (tabName === "compare") {
+        tabCompare.classList.add("active");
+        playgroundView.classList.remove("hidden");
+        compareContainer.classList.remove("hidden");
+        revealed = playgroundView;
+      } else if (tabName === "bpe") {
+        tabStepBPE.classList.add("active");
+        bpeStepView.classList.remove("hidden");
+        revealed = bpeStepView;
+      } else if (tabName === "battle") {
+        tabBattle.classList.add("active");
+        battleView.classList.remove("hidden");
+        revealed = battleView;
+        renderBattle();
+      } else if (tabName === "guess") {
+        tabGuess.classList.add("active");
+        guessView.classList.remove("hidden");
+        revealed = guessView;
+        initGuessGame();
+      } else if (tabName === "learn") {
+        tabLearn.classList.add("active");
+        learnView.classList.remove("hidden");
+        revealed = learnView;
+      }
+
+      // Fallback entrance animation when View Transitions API is unavailable
+      if (revealed && !REDUCED && !document.startViewTransition) {
+        revealed.classList.remove("view-enter");
+        void revealed.offsetWidth; // restart
+        revealed.classList.add("view-enter");
+      }
+      if (revealed) revealed.focus({ preventScroll: true });
+
+      updateTokenization();
+    };
+
+    // View Transitions API (Chrome 111+/Edge 111+/Firefox 144+/Safari 18+);
+    // styled via ::view-transition-old/new(root) in index.css
+    if (document.startViewTransition && !REDUCED) {
+      document.startViewTransition(apply);
+    } else {
+      apply();
     }
-    updateTokenization();
+    moveTabIndicator();
   }
 
   // Initial route resolution:
@@ -886,10 +1162,13 @@ document.addEventListener("DOMContentLoaded", () => {
     try { document.execCommand("copy"); if (done) done(true); } catch (e) { if (done) done(false); }
     document.body.removeChild(ta);
   }
-  function flashBtn(btn, label) {
-    const original = btn.innerHTML;
-    btn.innerHTML = label;
-    setTimeout(() => { btn.innerHTML = original; }, 1400);
+  function flashBtn(btn, ok) {
+    showToast(ok ? "COPIED TO CLIPBOARD" : "COPY FAILED");
+    if (ok && !REDUCED) {
+      btn.classList.remove("flash-ok");
+      void btn.offsetWidth; // restart flash animation
+      btn.classList.add("flash-ok");
+    }
   }
 
   const btnShareLink = document.getElementById("btnShareLink");
@@ -897,7 +1176,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const payload = b64uEncode(JSON.stringify({ t: promptInput.value, m: activeModelKey }));
     const url = location.origin + BASE_PATH + "playground?d=" + payload;
     history.replaceState({ tab: "playground" }, "", BASE_PATH + "playground?d=" + payload);
-    copyToClipboard(url, ok => flashBtn(btnShareLink, ok ? "[ &#10003; COPIED! ]" : "[ COPY FAILED ]"));
+    copyToClipboard(url, ok => flashBtn(btnShareLink, ok));
   });
 
   const btnCopyPy = document.getElementById("btnCopyPy");
@@ -910,7 +1189,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       py = `# NOTE: ${cfg.name} does not publish its tokenizer file.\n# These IDs are this tool's approximation — treat counts, not exact IDs, as reliable.\nids = ${JSON.stringify(ids)}\ntext = ${JSON.stringify(promptInput.value)}\nprint(len(ids))`;
     }
-    copyToClipboard(py, ok => flashBtn(btnCopyPy, ok ? "[ &#10003; COPIED! ]" : "[ COPY FAILED ]"));
+    copyToClipboard(py, ok => flashBtn(btnCopyPy, ok));
   });
 
   function downloadFile(filename, content, mime) {
@@ -976,6 +1255,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     rows.sort((a, b) => (a.count ?? Infinity) - (b.count ?? Infinity));
     const loaded = rows.filter(r => r.count !== null);
+    const maxCount = loaded.length ? Math.max(...loaded.map(r => r.count)) : 1;
 
     let html = `<div class="battle-note">
       <strong>${escapeHtml(name)}</strong> — ${(text.length / 1024).toFixed(1)} KB ·
@@ -993,9 +1273,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const cpt = r.count ? (text.length / r.count).toFixed(2) : "—";
       const cost = r.cfg.costPer1M ? ((r.count / 1000000) * r.cfg.costPer1M.input).toFixed(4) : "—";
       const pct = r.cfg.contextWindow ? ((r.count / r.cfg.contextWindow) * 100).toFixed(2) + "%" : "—";
-      html += `<tr><td>${i + 1}${i === 0 && rows[0].count ? " 🏆" : ""}</td>
+      const delay = Math.min(i, 40) * 18;
+      const barPct = Math.max(2, Math.round((r.count / maxCount) * 100));
+      html += `<tr style="--row-delay:${delay}ms"><td>${i + 1}${i === 0 && rows[0].count ? " 🏆" : ""}</td>
         <td>${r.cfg.name}</td>
-        <td class="battle-mono battle-strong">${r.count.toLocaleString()}</td>
+        <td class="battle-mono battle-strong">${r.count.toLocaleString()}<span class="battle-bar" aria-hidden="true"><i class="battle-bar-fill" style="width:${barPct}%; animation-delay:${delay}ms"></i></span></td>
         <td class="battle-mono">${cpt}</td>
         <td class="battle-mono">$${cost}</td>
         <td class="battle-mono">${pct}</td></tr>`;
@@ -1003,6 +1285,13 @@ document.addEventListener("DOMContentLoaded", () => {
     html += `</tbody></table>`;
     fileAnalysisWrap.innerHTML = html;
     fileAnalysisWrap.classList.remove("hidden");
+    if (!REDUCED) {
+      fileAnalysisWrap.querySelectorAll("tbody tr").forEach(tr => {
+        if (tr.hasAttribute("style")) {
+          tr.classList.add("anim-enter");
+        }
+      });
+    }
     document.getElementById("fdUseInPlayground").addEventListener("click", () => {
       promptInput.value = text;
       switchTab("playground");
@@ -1079,15 +1368,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const phrase = nextFromDeck();
     gAnswer = createTokenizer(GUESS_MODEL).tokenize(phrase).length;
     gPhrase.textContent = phrase;
+    gPhrase.classList.remove("shaking", "stamped");
     gInput.value = "";
     gFeedback.classList.add("hidden");
     gFeedback.innerHTML = "";
     btnGuessSubmit.classList.remove("hidden");
     btnGuessNext.classList.add("hidden");
     gRound.textContent = gState.round;
-    gScore.textContent = gState.score;
-    gStreak.textContent = gState.streak;
-    gBest.textContent = gState.best;
+    animateCount(gScore, gState.score);
+    animateCount(gStreak, gState.streak);
+    animateCount(gBest, gState.best);
   }
 
   function initGuessGame() {
@@ -1112,9 +1402,16 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       gState.streak = 0;
     }
-    gScore.textContent = gState.score;
-    gStreak.textContent = gState.streak;
-    gBest.textContent = gState.best;
+    animateCount(gScore, gState.score);
+    animateCount(gStreak, gState.streak);
+    animateCount(gBest, gState.best);
+
+    // Motion feedback: shake on a miss, red stamp bar on a hit
+    if (!REDUCED) {
+      gPhrase.classList.remove("shaking", "stamped");
+      void gPhrase.offsetWidth;
+      gPhrase.classList.add(correct ? "stamped" : "shaking");
+    }
 
     const delta = guess - gAnswer;
     gFeedback.innerHTML = `
@@ -1122,7 +1419,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ${correct ? "&#10003; EXACT! YOU THINK IN TOKENS NOW." : `&#10007; OFF BY ${Math.abs(delta)} — YOU GUESSED ${guess > gAnswer ? "HIGH" : "LOW"}.`}
       </div>
       <p class="gf-line">ACTUAL TOKEN COUNT: <b>${gAnswer}</b></p>
-      <div class="tokens-display-box gf-tokens"></div>`;
+      <div class="tokens-display-box gf-tokens"></div>
+      ${correct && !REDUCED ? '<div class="gf-stamp" aria-hidden="true">&#10003; CORRECT</div>' : ""}`;
     renderTokenPills(gFeedback.querySelector(".gf-tokens"), tokens.slice(0, 60));
     gFeedback.classList.remove("hidden");
     btnGuessSubmit.classList.add("hidden");
@@ -1253,6 +1551,7 @@ document.addEventListener("DOMContentLoaded", () => {
       html += `</div>`;
       trainBPEOutput.innerHTML = html;
       trainBPEOutput.classList.remove("hidden");
+      stagger(trainBPEOutput.querySelectorAll(".bpe-step-card"), 18, 60);
       const compression = rawLen ? (rawLen / afterLen).toFixed(2) : "0";
       trainStatus.textContent = `DONE — ${result.merges.length} MERGES · ${compression} BYTES/TOKEN`;
     }, 30);
@@ -1267,14 +1566,17 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     const ids = encodeWithMerges(trainedBpe.merges, encodeSampleEl.value || "");
     encodeSampleResult.innerHTML = "";
+    const frag = document.createDocumentFragment();
     ids.forEach(id => {
       const pill = document.createElement("span");
       pill.className = "token-pill";
       pill.dataset.color = id % 6;
       const display = trainedBpe.vocab.has(id) ? bytesToDisplay(trainedBpe.vocab.get(id)) : "?" + id;
       pill.innerHTML = `<span>${escapeHtml(display)}</span><span class="token-id-badge">${id}</span>`;
-      encodeSampleResult.appendChild(pill);
+      frag.appendChild(pill);
     });
+    encodeSampleResult.appendChild(frag);
+    stagger(encodeSampleResult.querySelectorAll(".token-pill"), 14, 48);
     encodeSampleResult.classList.remove("hidden");
   });
 
@@ -1326,17 +1628,51 @@ document.addEventListener("DOMContentLoaded", () => {
     tourCard.style.top = y + "px";
   }
 
+  let tourReturnFocus = null;
   function endTour() {
     tourOverlay.classList.add("hidden");
     document.querySelectorAll(".tour-highlight").forEach(el => el.classList.remove("tour-highlight"));
     localStorage.setItem(TOUR_KEY, "done");
+    if (tourReturnFocus && typeof tourReturnFocus.focus === "function") {
+      tourReturnFocus.focus();
+    }
+    tourReturnFocus = null;
   }
 
   function startTour() {
+    tourReturnFocus = document.activeElement;
     tourIdx = 0;
     tourOverlay.classList.remove("hidden");
     showTourStep();
+    // Make overlay focusable for keydown capture
+    tourOverlay.setAttribute("tabindex", "-1");
+    tourOverlay.focus({ preventScroll: true });
+    const first = tourCard.querySelector("button");
+    if (first) first.focus();
   }
+
+  // Escape closes the tour; Tab cycles focus between Next/Skip (a11y focus trap)
+  tourOverlay.addEventListener("keydown", (e) => {
+    if (tourOverlay.classList.contains("hidden")) return;
+    if (e.key === "Escape") {
+      e.preventDefault();
+      endTour();
+      return;
+    }
+    if (e.key === "Tab") {
+      const focusables = tourCard.querySelectorAll("button, [href], [tabindex]:not([tabindex='-1'])");
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    }
+  });
 
   document.getElementById("tourNext").addEventListener("click", () => {
     tourIdx++;
@@ -1376,7 +1712,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const response = await fetch("https://api.github.com/repos/indranil122/universal-llm-tokenizer/commits?per_page=1");
+      // Backend-first: when served by server.js, /api/github/commits is a
+      // cached proxy that beats GitHub's unauthenticated rate limits.
+      // Fallback: direct API call (GitHub Pages / file hosts have no backend).
+      let response;
+      try {
+        response = await fetch("/api/github/commits?per_page=1");
+      } catch (backendErr) {
+        response = await fetch("https://api.github.com/repos/indranil122/universal-llm-tokenizer/commits?per_page=1");
+      }
       if (response.ok) {
         const data = await response.json();
         const date = new Date(data[0].commit.author.date);

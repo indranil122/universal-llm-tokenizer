@@ -11,7 +11,10 @@
   <meta property="og:image" content="social-preview.png">
   <meta name="twitter:card" content="summary_large_image">
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
-  <link rel="stylesheet" href="landing.css?v=3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="landing.css?v=4">
   <script>
     const savedTheme = localStorage.getItem('tokenizer-theme') || 'light';
     document.documentElement.setAttribute('data-theme', savedTheme);
@@ -31,14 +34,25 @@
     </header>
 
     <main class="hero-section">
-      <h1 class="hero-title">DECODE HOW AI READS YOUR WORDS</h1>
+      <h1 class="hero-title" id="heroTitle">DECODE HOW AI READS YOUR WORDS</h1>
       <p class="hero-subtitle">SEE EXACTLY HOW GPT-4, CLAUDE, LLAMA AND 15 OTHER MODELS SLICE UP YOUR TEXT INTO TOKENS IN REAL-TIME.</p>
 
       <div class="cta-container">
-        <a href="app.html" class="btn-primary">LAUNCH_TOKENIZER</a>
+        <a href="app.html" class="btn-primary" id="launchBtn">LAUNCH_TOKENIZER</a>
         <a href="app.html?tab=learn" class="btn-secondary">LEARN_ACADEMY</a>
         <a href="https://github.com/indranil122/universal-llm-tokenizer" target="_blank" class="btn-secondary">VIEW_SOURCE</a>
       </div>
+
+      <!-- Mini live demo: tokenize without leaving the landing page -->
+      <section class="mini-demo" aria-label="Quick tokenizer demo">
+        <span class="md-kicker">// NO CLICK-THROUGH NEEDED — TYPE AND WATCH IT SLICE</span>
+        <div class="md-row">
+          <input id="miniDemoInput" class="md-input" value="Hello World! How does AI see this?" spellcheck="false" aria-label="Text to tokenize">
+          <span class="md-count"><b id="miniDemoCount">0</b> TOKENS</span>
+        </div>
+        <div id="miniDemoOut" class="md-out" aria-live="polite"></div>
+        <p class="md-hint">// APPROXIMATE DEMO ENGINE — THE APP SERVES BYTE-EXACT OFFICIAL VOCABULARIES FOR 11 ENCODINGS</p>
+      </section>
 
       <div class="features-grid">
         <div class="feature-card">
@@ -157,5 +171,9 @@
       localStorage.setItem('tokenizer-theme', newTheme);
     });
   </script>
+  <!-- Tokenizer engines for the mini live demo (approximate BPE, zero downloads) -->
+  <script src="tokenizers/vocabularies.js"></script>
+  <script src="tokenizers/bpe.js"></script>
+  <script src="landing.js"></script>
 </body>
 </html>

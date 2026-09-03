@@ -208,30 +208,50 @@ Add a config in <code>tokenizers/vocabularies.js</code>, an <code>&lt;option&gt;
 
 ## 📁 Project Structure
 
-```
-├── app.html                 # Main UI (playground, compare, BPE, all-models battle, learn)
-├── index.html               # Landing page
-├── landing.css              # Landing page styling
-├── app.js                   # Main controller: tokenization, sync, metrics, popovers
-├── index.css                # App styling (light/dark brutalist theme)
-├── favicon.svg              # Site icon
-├── social-preview.png       # Social share image
+```text
+├── server.js                  # Zero-dependency Node backend (static hosting + cached GitHub API proxy)
+├── app.html                   # Main UI (playground, compare, BPE, all-models battle, learn)
+├── index.html                 # Landing page (with live mini tokenizer demo)
+├── landing.css                # Landing page styling + motion system
+├── landing.js                 # Landing motion controller (hero slicing, reveals, mini demo)
+├── app.js                     # Main controller: tokenization, sync, metrics, popovers
+├── index.css                  # App styling (light/dark brutalist theme) + motion system
+├── favicon.svg                # Site icon
+├── social-preview.png         # Social share image
 ├── test/
-│   └── tokenizer.test.js    # Zero-dependency node:test suite (npm test)
+│   └── tokenizer.test.js      # Zero-dependency node:test suite (npm test)
 ├── tokenizers/
-│   ├── vocabularies.js      # 24 model configs (context windows, costs, exact flags)
-│   ├── tiktoken.js          # Exact byte-BPE engine (verified vs official tiktoken)
-│   ├── bpe.js               # Approximate Byte-Pair Encoding engine
-│   ├── wordpiece.js         # WordPiece engine (BERT)
-│   ├── sentencepiece.js     # SentencePiece engine (Gemini, Llama 2)
-│   └── data/                # Real vocabularies (o200k, cl100k, p50k, llama3)
-│       └── raw/             # Original source files (.tiktoken, tokenizer.json)
+│   ├── vocabularies.js        # 24 model configs (context windows, costs, exact flags)
+│   ├── tiktoken.js            # Exact byte-BPE engine (verified vs official tiktoken)
+│   ├── bpe.js                 # Approximate Byte-Pair Encoding engine
+│   ├── wordpiece.js           # WordPiece engine (BERT)
+│   ├── sentencepiece.js       # SentencePiece engine (Gemini, Llama 2)
+│   └── data/                  # Real vocabularies (o200k, cl100k, p50k, llama3)
+│       └── raw/               # Original source files (.tiktoken, tokenizer.json)
 ├── tools/
-│   ├── convert_vocab.js     # Converts official tokenizer files -> data/*.js
-│   ├── compare_tiktoken.js  # Validates engine vs the official npm tiktoken package
-│   └── validate_tiktoken.js # Round-trip / offset integrity checks
-└── package.json             # npm test (zero-dependency node:test suite)
+│   ├── convert_vocab.js       # Converts official tokenizer files -> data/*.js
+│   ├── compare_tiktoken.js    # Validates engine vs the official npm tiktoken package
+│   └── validate_tiktoken.js   # Round-trip / offset integrity checks
+└── package.json               # npm start / dev / test — all zero-dependency
 ```
+
+### 🖥️ Run locally (frontend + backend)
+
+```bash
+npm start            # -> http://localhost:8080  (frontend + backend API)
+PORT=9000 npm start  # custom port
+npm run dev          # same as start
+```
+
+The backend (`server.js`, plain Node ≥ 18, **zero npm packages**) serves both pages and adds:
+
+| Endpoint | What it does |
+|---|---|
+| `GET /api/health` | Service status JSON (uptime, node version) |
+| `GET /api/github/commits?per_page=1` | **Cached (5 min) GitHub commits proxy** — beats the unauthenticated 60 req/hr rate limit that breaks the `[ CHECK LIVE UPDATES ]` button on shared IPs; honors `GITHUB_TOKEN` env if set |
+| `/playground`, `/battle`, … | Pretty History-API routes served directly (no 404 hop) |
+
+Everything still works with **no backend at all** (GitHub Pages): the frontend automatically falls back to the direct GitHub API when `/api/*` isn't available.
 
 ---
 
