@@ -4,9 +4,9 @@
 
 # 🤖 Universal LLM Tokenizer & Visualizer
 
-### *Paste a prompt. Watch 24 AI models fight over it — token by token.*
+### *Paste a prompt. Watch 24 AI models fight over it - token by token.*
 
-**See exactly how GPT-5.6, Claude Fable 5, Gemini 3.1, Llama 4, Kimi K3, DeepSeek V4 & 20 more models slice your text into subword tokens — live, color-coded, with byte-exact token IDs.**
+**See exactly how GPT-5.6, Claude Fable 5, Gemini 3.1, Llama 4, Kimi K3, DeepSeek V4 & 20 more models slice your text into subword tokens - live, color-coded, with byte-exact token IDs.**
 
 [![Live Demo](https://img.shields.io/badge/%F0%9F%96%A5%EF%B8%8F_Live_Demo-GitHub_Pages-2ea44f?style=for-the-badge)](https://indranil122.github.io/universal-llm-tokenizer/)
 [![Zero Dependencies](https://img.shields.io/badge/Zero_Dependencies-Vanilla_JS-f7df1e?style=for-the-badge)]()
@@ -31,10 +31,10 @@
 
 ## 🔥 Why tokenization matters
 
-Understanding **tokenization** is the #1 hidden skill in the AI world — it decides your **API costs**, your **context limits**, and even your **model's intelligence**:
+Understanding **tokenization** is the #1 hidden skill in the AI world - it decides your **API costs**, your **context limits**, and even your **model's intelligence**:
 
 - 💸 **It's your bill.** Every API call is priced per token. Non-English text can cost **2–10× more** for the same sentence.
-- 📏 **It's your limit.** A "1M context window" counts tokens, not words — and some scripts burn through it fast.
+- 📏 **It's your limit.** A "1M context window" counts tokens, not words - and some scripts burn through it fast.
 - 🧠 **It's your quality.** Why can't LLMs count the letters in *strawberry*? Why do they fumble at reversing strings? **Tokenization.** One token = one opaque ID; the model never sees individual letters.
 - 🌍 **It's why AI feels "English-first."** Devanagari, Tamil, CJK, Arabic and emoji all explode into many more tokens than English.
 
